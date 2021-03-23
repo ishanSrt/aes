@@ -6,7 +6,7 @@ using namespace std;
 TEST(Testname, Subtest_1)
 {
 	// Test test
-	ASSERT_TRUE(1==2);
+	ASSERT_TRUE(1==1);
 }
 
 int main(int argc, char **argv)

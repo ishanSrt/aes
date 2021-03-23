@@ -1,6 +1,6 @@
 CC=g++
 
-CFLAGS=-c -Wall
+CFLAGS=-Wall
 
 all:
 	$(CC) $(CFLAGS) src/aes.cpp -o build/prog
