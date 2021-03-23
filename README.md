@@ -1,10 +1,15 @@
+# AES
+
+
 GTest: 
 ```
 git clone https://github.com/google/googletest
 cd googletest
 mkdir build
 cd build
-cmake ..
+cmake cmake -DCMAKE_C_COMPILER=gcc ..
 make
-make install
+sudo make install
+cd ../..
+rm -rf googletest 
 ```
