@@ -7,7 +7,7 @@ git clone https://github.com/google/googletest
 cd googletest
 mkdir build
 cd build
-cmake -DCMAKE_C_COMPILER=gcc ..
+cmake .. -DCMAKE_CXX_STANDARD=17
 make
 sudo make install
 cd ../..
