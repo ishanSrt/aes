@@ -173,6 +173,31 @@ byte** InvMixColumns(byte** s){
 	return mixedState;
 }
 
+byte xtime(byte b) // multiplication by x
+{
+	if((b>>7) == 1)
+	{
+		return (b<<1) ^ 0x1b;
+	}
+	else
+	{
+		return (b<<1);
+	}
+}
+
+void Rcon(byte* a, int n)
+{
+	byte c = 1
+	for (int i=1; i<n; i++)
+	{
+		c = xtime(c);
+	}
+	a[0] = c;
+	a[1] = 0;
+	a[2] = 0;
+	a[3] = 0;
+}
+
 byte** AddRoundKey(byte** s, byte** w, int round) { //w[4][?]
 // Transformation in the Cipher and Inverse Cipher in which a 
 // Round Key equals the size of the State (i.e., for Nb = 4, the Round
@@ -208,6 +233,8 @@ byte** SubWord(byte* w[]) {
 	return w;
 
 }
+
+
 byte* RotWord(byte* w) {
 // Function used in the Key Expansion routine that takes a four-byte
 // word and performs a cyclic permutation. 
@@ -224,7 +251,6 @@ byte* RotWord(byte* w) {
 	return w;
 
 }
-
 
 
 void keyExpansion(byte** key, byte** w) //words are 4 bytes  //int Nk
