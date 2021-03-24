@@ -6,7 +6,7 @@ using namespace std;
 
 typedef unsigned char byte;
 
-byte** AddRoundKey(byte** s, byte** w, int round);
+byte** AddRoundKey(byte** s, byte* w, int round);
 byte** ShiftRows(byte** s);
 byte** InvShiftRows(byte** s);
 byte** SubBytes(byte** s);

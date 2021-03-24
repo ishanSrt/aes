@@ -187,8 +187,8 @@ byte xtime(byte b) // multiplication by x
 
 void Rcon(byte* a, int n)
 {
-	byte c = 1
-	for (int i=1; i<n; i++)
+	byte c = 1;
+	for(int i=1; i<n; i++)
 	{
 		c = xtime(c);
 	}
@@ -198,18 +198,19 @@ void Rcon(byte* a, int n)
 	a[3] = 0;
 }
 
-byte** AddRoundKey(byte** s, byte** w, int round) { //w[4][?]
+byte** AddRoundKey(byte** s, byte* w, int round) 
+{
 // Transformation in the Cipher and Inverse Cipher in which a 
 // Round Key equals the size of the State (i.e., for Nb = 4, the Round
 // Key length equals 128 bits/16 bytes). uses xor ^
-	int l = round * Nb;
+
 	byte** keyAddedState;
 
 	for(int i = 0; i < 4; i ++)
 	{
 		for(int j = 0; j < 4; j++)
 		{
-			keyAddedState[j][i] = s[j][i] ^ w[j][l+i];
+			keyAddedState[j][i] = s[j][i] ^ w[i+4*j];
 		}
 	}
 	//not really sure on w
@@ -290,9 +291,9 @@ void keyExpansion(byte* key, byte* w, int Nk) // generates a total of Nb(Nr + 1)
 	
 		
 		w[i] = w[i-4*Nk] ^ temp[0];
-    	w[i+1] = w[i-4*Nk+1] ^ temp[1];
-    	w[i+2] = w[i-4*Nk+2] ^ temp[2];
-    	w[i+3] = w[i-4*Nk+3] ^ temp[3];
+		w[i+1] = w[i-4*Nk+1] ^ temp[1];
+		w[i+2] = w[i-4*Nk+2] ^ temp[2];
+		w[i+3] = w[i-4*Nk+3] ^ temp[3];
 		
 		i+=4;
 	}
