@@ -23,9 +23,8 @@ fixed). For this standard, Nr = 10, 12, or 14. */
 //byte key[4][Nk]; 
 
 
-
-byte** input;  //should this be an array or 2d array?? 
-byte** output; //should this be an array or 2d array?? 
+byte* input;  //array
+byte* output; //array
 
 byte** ShiftRows(byte** s){
 // Transformation in the Cipher that processes the State by cyclically
@@ -255,7 +254,7 @@ void RotWord(byte* w) {
 // Nb = 4
 
 void keyExpansion(byte* key, byte* w, int Nk) // generates a total of Nb(Nr + 1) words
-{ //for w each column is a word
+{ //w is the expanded key output
 	byte* temp = new byte[4];
 	byte* rcon = new byte[4];
 
@@ -313,51 +312,66 @@ byte** blockToState(byte* inout)
 	return state;
 }
 
-byte** encrypt(byte* in, byte* out, byte* w) 
+byte* stateToBlock(byte** state)
+{
+	byte *inout = new byte[4];
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			inout[i+4*j] = state[i][j];
+		}
+	}
+	return inout;
+}
+
+byte* encrypt(byte* in, byte* out, byte* w) 
+{
+	// w is key of length Nb(Nr+1)
+	byte** state;
+	state = blockToState(in);
+	state = AddRoundKey(state, w);
+
+	for(int round = 1; round <= (Nr-1); round++)
+	{
+		state = SubBytes(state);
+		state = ShiftRows(state);
+		state = MixColumns(state);
+		state = AddRoundKey(state, w+round*Nb*4); //check round*Nb*4
+	}
+
+	state = SubBytes(state);
+	state = ShiftRows(state);
+	state = AddRoundKey(state, w + Nr*Nb*4); //again check 4
+	return stateToBlock(state);
+}
+
+byte* invCipher(byte* in, byte* out, byte* w)
 {
 	byte** state;
 	state = blockToState(in);
-	state = AddRoundKey(state, w, 0); //w[0][Nb-1]
+	state = AddRoundKey(state, w + Nr*Nb*4);
 
-	for(int round = 1; round < (Nr-1); round++)
+	for(int round = Nr-1; round >= 1; round--)
 	{
-		state = SubBytes(state);
-		state = ShiftRows(state);
-		state = MixColumns(state);
-		state = AddRoundKey(state, w[round*Nb][(round+1)*Nb-1], round);
+		state = InvSubBytes(state);
+		state = InvShiftRows(state);
+		state = AddRoundKey(state, w + round*Nb*4);
+		state = InvMixColumns(state);
 	}
 
-	state = SubBytes(state);
-	state = ShiftRows(state);
-	state = AddRoundKey(state, w[Nr*Nb][(Nr+1)*Nb-1], 0); //not sure on this, what to pass for round?
-	return state;
-}
-
-byte** invCipher(byte** in, byte** out, byte** w)
-{ //for w each column is a word
-	byte** state = malloc(sizeof(byte*) * Nb);
-	state = in; //need a loop
-	state = AddRoundKey(state, w[Nr*Nb][(Nr+1)*Nb-1], 0); //out of bounds on w? only 4 rows not 17
-
-	for(int round = Nr-1; round > 1; round--)
-	{
-		state = SubBytes(state);
-		state = ShiftRows(state);
-		state = MixColumns(state);
-		state = AddRoundKey(state, w[round*Nb][(round+1)*Nb-1], round);
-	}
-
-	state = SubBytes(state);
-	state = ShiftRows(state);
-	state = AddRoundKey(state, w[0][Nb-1], 0); //not sure on this, what to pass for round?
 	
-	return state;
+	state = InvShiftRows(state);
+	state = InvSubBytes(state);
+	state = AddRoundKey(state, w);
+	
+	return stateToBlock(state);
 }
 
 int main()
 {
 	//REDO
-	int keyLen
+	int keyLen;
 	cout << "keyLen\n";
 	cin >> keyLen;
 	switch(keyLen)

@@ -18,6 +18,7 @@ void RotWord(byte* w);
 byte xtime(byte b);
 void Rcon(byte* a, int n);
 byte** blockToState(byte* w);
+byte* stateToBlock(byte** state);
 
 /*
 KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk) 
@@ -69,7 +70,7 @@ begin
 	out = state
 end
  */
-byte** encrypt(byte* in, byte* out, byte* w);
+byte* encrypt(byte* in, byte* out, byte* w);
 
 
 
@@ -120,7 +121,7 @@ input to InvMixColumns() is normally the State array, which is considered
 to be a two-dimensional array of bytes, whereas the input here is a Round
 Key computed as a one-dimensional array of words).
  */
-byte** invCipher(byte** in, byte** out, byte** w);
+byte* invCipher(byte* in, byte* out, byte* w);
 
 const byte sBox[16][16] = {  //double check this is comletely correct..
         {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},
