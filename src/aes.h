@@ -6,7 +6,7 @@ using namespace std;
 
 typedef unsigned char byte;
 
-byte** AddRoundKey(byte** s, byte* w, int round);
+byte** AddRoundKey(byte** s, byte* w);
 byte** ShiftRows(byte** s);
 byte** InvShiftRows(byte** s);
 byte** SubBytes(byte** s);
@@ -17,6 +17,7 @@ void SubWord(byte* w);
 void RotWord(byte* w);
 byte xtime(byte b);
 void Rcon(byte* a, int n);
+byte** blockToState(byte* w);
 
 /*
 KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk) 
@@ -68,7 +69,7 @@ begin
 	out = state
 end
  */
-byte** encrypt(byte** in, byte** out, byte** w);
+byte** encrypt(byte* in, byte* out, byte* w);
 
 
 

@@ -198,7 +198,7 @@ void Rcon(byte* a, int n)
 	a[3] = 0;
 }
 
-byte** AddRoundKey(byte** s, byte* w, int round) 
+byte** AddRoundKey(byte** s, byte* w) 
 {
 // Transformation in the Cipher and Inverse Cipher in which a 
 // Round Key equals the size of the State (i.e., for Nb = 4, the Round
@@ -300,10 +300,23 @@ void keyExpansion(byte* key, byte* w, int Nk) // generates a total of Nb(Nr + 1)
 
 }
 
-byte** encrypt(byte** in, byte** out, byte** w) 
-{ //for w each column is a word
+byte** blockToState(byte* inout)
+{
+	byte** state = new byte*[4];
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			state[i][j] = inout[i+4*j];
+		}
+	}
+	return state;
+}
+
+byte** encrypt(byte* in, byte* out, byte* w) 
+{
 	byte** state;
-	state = in;
+	state = blockToState(in);
 	state = AddRoundKey(state, w, 0); //w[0][Nb-1]
 
 	for(int round = 1; round < (Nr-1); round++)
