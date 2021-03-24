@@ -15,6 +15,8 @@ byte** MixColumns(byte** s);
 byte** InvMixColumns(byte** s);
 byte** SubWord(byte* w[]);
 byte* RotWord(byte* w);
+byte xtime(byte b);
+void Rcon(byte* a, int n);
 
 /*
 KeyExpansion(byte key[4*Nk], word w[Nb*(Nr+1)], Nk) 
