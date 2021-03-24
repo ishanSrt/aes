@@ -13,8 +13,8 @@ byte** SubBytes(byte** s);
 byte** InvSubBytes(byte** s);
 byte** MixColumns(byte** s);
 byte** InvMixColumns(byte** s);
-byte** SubWord(byte* w[]);
-byte* RotWord(byte* w);
+void SubWord(byte* w);
+void RotWord(byte* w);
 byte xtime(byte b);
 void Rcon(byte* a, int n);
 
@@ -43,7 +43,7 @@ begin
 	end while
 end
  */
-void keyExpansion(byte** key, byte** w);
+void keyExpansion(byte** key, byte** w, int Nk);
 
 
 

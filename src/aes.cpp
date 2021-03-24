@@ -216,7 +216,7 @@ byte** AddRoundKey(byte** s, byte** w, int round) { //w[4][?]
 	return keyAddedState;
 }
 
-byte** SubWord(byte* w[]) {
+void SubWord(byte* w) {
 // Function used in the Key Expansion routine that takes a four-byte
 // input word and applies an S-box to each of the four bytes to
 // produce an output word.
@@ -226,16 +226,14 @@ byte** SubWord(byte* w[]) {
 	byte sixteen = 0x10;
 	for(int i = 0; i < 4; i++)
 	{
-		valueRow = *(w[i]) / sixteen;
-		valueCol = *(w[i]) % sixteen;
-		*w[i] = sBox[valueRow][valueCol];
+		valueRow = (w[i]) / sixteen;
+		valueCol = (w[i]) % sixteen;
+		w[i] = sBox[valueRow][valueCol];
 	}
-	return w;
-
 }
 
 
-byte* RotWord(byte* w) {
+void RotWord(byte* w) {
 // Function used in the Key Expansion routine that takes a four-byte
 // word and performs a cyclic permutation. 
 	byte temp[4];
@@ -247,49 +245,56 @@ byte* RotWord(byte* w) {
 	w[1] = temp[2];
 	w[2] = temp[3];
 	w[3] = temp[0];
-	
-	return w;
-
 }
 
+// Nk (key length 128, 192, 256) = 4, 6, 8 reflects the number of 32 bit words 
+// or the number of columns in the cipher key
 
-void keyExpansion(byte** key, byte** w) //words are 4 bytes  //int Nk
+// Nr (number of rounds) depends on key length = 10, 12, 14
+// Nb = 4
+
+void keyExpansion(byte* key, byte* w, int Nk) // generates a total of Nb(Nr + 1) words
 { //for w each column is a word
-	byte* temp; //Nb = 4
-	byte Rcon[4][10] = {
-		{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09},
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-		};
+	byte* temp = new byte[4];
+	byte* rcon = new byte[4];
 
 	int i = 0;
-	while(i < Nk)
-	{
-		for(int j = 0; j < 4; j++)
-		{
-			w[i][j] = key[3][j]; //?? says 4 not 3 in sudo code but thats out of bounds?
-		}
+	while(i < 4*Nk)
+	{	
+		w[i] = key[i];
 		i++;
 	}
-	i = Nk;
+	i = 4*Nk;
 
-	while(i < Nb * (Nr+1))
+	while(i < 4 * Nb * (Nr+1))
 	{
-		temp = w[i-1]; //??
-		if(i % Nk == 0)
+		temp[0] = w[i-4];
+		temp[1] = w[i-3];
+		temp[2] = w[i-2];
+		temp[3] = w[i-1];
+
+		if(i/4 % Nk == 0)
 		{
-			temp = *SubWord(temp) ^ *Rcon[i/Nk]; //??
+			RotWord(temp);
+			SubWord(temp);
+			Rcon(rcon, i/(Nk*4));
+			temp[0] = temp[0] ^ rcon[0];
+			temp[1] = temp[1] ^ rcon[1];
+			temp[2] = temp[2] ^ rcon[2];
+			temp[3] = temp[3] ^ rcon[3];
 		}
-		else if (Nk > 6 && i % Nk == 4)
+		else if (Nk > 6 && i/4 % Nk == 4)
 		{
-			temp = SubWord(temp);
+			SubWord(temp);
 		}
-		else
-		{
-			w[i] = *w[i-Nk] ^ *temp;
-		}
-		i++;
+	
+		
+		w[i] = w[i-4*Nk] ^ temp[0];
+    	w[i+1] = w[i-4*Nk+1] ^ temp[1];
+    	w[i+2] = w[i-4*Nk+2] ^ temp[2];
+    	w[i+3] = w[i-4*Nk+3] ^ temp[3];
+		
+		i+=4;
 	}
 
 }
