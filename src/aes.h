@@ -6,22 +6,36 @@ using namespace std;
 
 typedef unsigned char byte;
 
-byte** AddRoundKey(byte** s, byte** w, int round);
-byte** ShiftRows(byte** s);
-byte** InvShiftRows(byte** s);
-byte** SubBytes(byte** s);
-byte** InvSubBytes(byte** s);
-byte** MixColumns(byte** s);
-byte** InvMixColumns(byte** s);
-byte* SubWord(byte* w);
-byte* RotWord(byte* w);
-byte xtime(byte b);
-byte* Rcon(byte* a, int n);
-byte** blockToState(byte* w);
-byte* stateToBlock(byte** state);
-byte* KeyExpansion(byte** key, byte** w, int Nk);
-byte* Cipher(byte* in, byte** w);
-byte* InvCipher(byte* in, byte** w);
+class Aes
+{
+	private:
+		int Nb;
+		int Nk;
+		int Nr;
+		byte **AddRoundKey(byte **s, byte **w, int round);
+		byte **ShiftRows(byte **s);
+		byte **InvShiftRows(byte **s);
+		byte **SubBytes(byte **s);
+		byte **InvSubBytes(byte **s);
+		byte **MixColumns(byte **s);
+		byte **InvMixColumns(byte **s);
+		byte *SubWord(byte *w);
+		byte *RotWord(byte *w);
+		byte xtime(byte b);
+		byte *Rcon(byte *a, int n);
+		byte **blockToState(byte *w);
+		byte *stateToBlock(byte **state);
+		
+
+	public:
+		byte **KeyExpansion(byte *key, byte **w); // needs to be made private later on
+
+		Aes(int keyLen);
+		byte *Cipher(byte *in, byte **w);
+		byte *InvCipher(byte *in, byte **w);
+};
+
+
 
 const byte sBox[16][16] = { 
 	{0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76},

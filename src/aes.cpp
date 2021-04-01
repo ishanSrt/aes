@@ -6,11 +6,11 @@ Description: Implementaion of the Advanced Encryption Standard
 *************************************************************************/
 
 #include "aes.h"
-#define Nb 4 //Nb is the Number of columns (32-bit words) comprising the State. 
+//#define Nb 4 //Nb is the Number of columns (32-bit words) comprising the State. 
 //For this standard, Nb = 4.
-int Nk; //Nk is the Number of 32-bit words comprising the Cipher Key.
+//int Nk; //Nk is the Number of 32-bit words comprising the Cipher Key.
 //For this standard, Nk = 4, 6, or 8
-int Nr; //Nr is the Number of rounds, which is a function of Nk and Nb. 
+//int Nr; //Nr is the Number of rounds, which is a function of Nk and Nb. 
 //For this standard, Nr = 10, 12, or 14. 
 
 //**************************************************************************
@@ -21,7 +21,30 @@ int Nr; //Nr is the Number of rounds, which is a function of Nk and Nb.
 // Description: Part of the transformation in the cipher that shifts the 
 // last three rows of the state by different offsets.
 //**************************************************************************
-byte** ShiftRows(byte** s)
+
+Aes::Aes(int keyLen)
+{
+	this->Nb = 4;
+	switch (keyLen)
+	{
+		case 128:
+			Nk = 4;	 // Nk (key length 128, 192, 256) = 4, 6, 8 reflects the number of 32 bit words
+			Nr = 10; // or the number of columns in the cipher key
+			break;	 // Nr (number of rounds) depends on key length = 10, 12, 14
+		case 192:
+			Nk = 6;
+			Nr = 12;
+			break;
+		case 256:
+			Nk = 8;
+			Nr = 14;
+			break;
+		default:
+			throw "Incorrect Key Length";
+	}
+}
+
+byte** Aes::ShiftRows(byte** s)
 {
 	byte** temp = new byte*[4]; //declare a temp array to hold all the original values of s
 	//Allocate array (size 4) of byte pointers (rows)
@@ -65,7 +88,7 @@ byte** ShiftRows(byte** s)
 // Description: Part of the inverse cipher that shifts the last three rows
 // of the state by different offsets to "undo" shift rows from the cipher.
 //**************************************************************************
-byte** InvShiftRows(byte** s) 
+byte **Aes::InvShiftRows(byte **s)
 {
 	byte** temp = new byte*[4]; //temp array to hold the original values of s
 	for(int i = 0; i < 4; i++)  //Allocate array (size 4) of byte pointers (rows)
@@ -113,7 +136,7 @@ byte** InvShiftRows(byte** s)
 // Description: Part of the transformation in cipher that replaces the values 
 // in the state with values from a look up table, s-box.
 //**************************************************************************
-byte** SubBytes(byte** s) 
+byte **Aes::SubBytes(byte **s)
 {	
 	byte valueRow;   	//will be the value of the row to find in s-box
 	byte valueCol;		//will be the value of teh column to find in s-box
@@ -140,7 +163,7 @@ byte** SubBytes(byte** s)
 // in the state with values from a look up table, inverse s-box. This is to 
 // "undo" the substition in SubBytes.
 //**************************************************************************
-byte** InvSubBytes(byte** s) 
+byte **Aes::InvSubBytes(byte **s)
 {
 	byte valueRow;		//will be the value of the row to find in s-box
 	byte valueCol;		//will be the value of teh column to find in s-box
@@ -167,7 +190,7 @@ byte** InvSubBytes(byte** s)
 // the columns in the state and independently mixes the data to produce new columns.
 // Uses look up tables for multiplication.
 //************************************************************************************
-byte** MixColumns(byte** s) 
+byte **Aes::MixColumns(byte **s)
 {
 	byte** temp = new byte*[4]; //allocate memory for pointer array
 	for(int i = 0; i < 4; i ++)
@@ -239,7 +262,7 @@ byte** MixColumns(byte** s)
 // and independently mixes the data to produce new columns that "undo" MixColumns.
 // Uses look up tables for multiplication.
 //************************************************************************************
-byte** InvMixColumns(byte** s)
+byte **Aes::InvMixColumns(byte **s)
 { 
 	byte** temp = new byte*[4]; //Allocate array (size 4) of byte pointers (rows);
 	for(int i = 0; i < 4; i++)
@@ -301,7 +324,7 @@ byte** InvMixColumns(byte** s)
 // takes a round key that is the same size as the state and XORs them together. The 
 // round key is generated during the key expansion.
 //************************************************************************************
-byte** AddRoundKey(byte** s, byte** w, int round) 
+byte **Aes::AddRoundKey(byte **s, byte **w, int round)
 {
 	for(int i = 0; i < 4; i ++)
 	{
@@ -320,7 +343,7 @@ byte** AddRoundKey(byte** s, byte** w, int round)
 // Description: Used by Rcon to perform multiplication polynomial x. Implimented at
 // byte level with a left shift and bitwise XOR with 0x1b
 //************************************************************************************
-byte xtime(byte b) // multiplication by x
+byte Aes::xtime(byte b) // multiplication by x
 {
 	if((b>>7) == 1)
 	{
@@ -338,7 +361,7 @@ byte xtime(byte b) // multiplication by x
 //
 // Description: Used by the KeyExpansion. Rcon generate the round constant rcon.
 //************************************************************************************
-byte* Rcon(byte* a, int n)
+byte *Aes::Rcon(byte *a, int n)
 {
 	byte c = 1;
 	for(int i=1; i<n; i++)
@@ -361,7 +384,7 @@ byte* Rcon(byte* a, int n)
 // Description: Used in KeyExpansion, takes a four byte input (word) and uses the s-box
 // to substitute the values of each of the four bytes to produce a new word. 
 //************************************************************************************
-byte* SubWord(byte* w) 
+byte *Aes::SubWord(byte *w)
 {
 	byte valueRow;   
 	byte valueCol;
@@ -382,7 +405,7 @@ byte* SubWord(byte* w)
 // Description: Used in KeyExpansion, takes a four byte input (word) and performs a
 // cyclic permutation. 
 //************************************************************************************
-byte* RotWord(byte* w) 
+byte *Aes::RotWord(byte *w)
 {
 	byte* temp = new byte[4]; //allocate memory for  temp 
 	for(int i =0; i < 4; i++)
@@ -404,7 +427,7 @@ byte* RotWord(byte* w)
 // Description: Uses a smaller (128, 192, 256) bit key to generate a larger key with a
 // total of Nb(Nr + 1) words and return this generated key schedule.
 //***************************************************************************************
-byte** KeyExpansion(byte* key, byte** w, int Nk) // generates a total of Nb(Nr + 1) words
+byte **Aes::KeyExpansion(byte *key, byte **w) // generates a total of Nb(Nr + 1) words
 { 
 
 	byte* temp = new byte[4]; 	//allocate memory for a temp word
@@ -463,7 +486,7 @@ byte** KeyExpansion(byte* key, byte** w, int Nk) // generates a total of Nb(Nr +
 // Takes a byte pointer, such as the input array, and changes it into a matrix 
 // (double pointer), such as the state.
 //***************************************************************************************
-byte** blockToState(byte* inout)
+byte **Aes::blockToState(byte *inout)
 {
 	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
 	for(int i = 0; i < 4; i++)
@@ -490,7 +513,7 @@ byte** blockToState(byte* inout)
 // Takes a byte pointer, such as the input array, and changes it into a matrix 
 // (double pointer), such as the state.
 //***************************************************************************************
-byte* stateToBlock(byte** state)
+byte *Aes::stateToBlock(byte **state)
 {
 	byte *inout = new byte[4*Nb]; //Allocate array (size 4) of byte pointers (rows)
 	for(int i = 0; i < 4; i++)
@@ -512,7 +535,7 @@ byte* stateToBlock(byte** state)
 // different transformations to create a cipher text. Can use keys of length 128, 
 // 192, or 256 bits.
 //************************************************************************************
-byte* Cipher(byte* in, byte** w) 
+byte *Aes::Cipher(byte *in, byte **w)
 {
 	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
 	for(int i = 0; i < 4; i++)
@@ -546,7 +569,7 @@ byte* Cipher(byte* in, byte** w)
 // different transformations to "undo" the cipher and return the original message. 
 // Can use keys of length 128, 192, or 256 bits.
 //************************************************************************************
-byte* InvCipher(byte* in, byte** w)
+byte *Aes::InvCipher(byte *in, byte **w)
 {
 	byte** state = new byte*[4]; //allocate memory for the state
 	for(int i = 0; i < 4; i++)
@@ -572,40 +595,30 @@ byte* InvCipher(byte* in, byte** w)
 
 int main()
 {
-	byte* input = new byte[4*Nb];  //message to be encrypted
-	byte* output = new byte[4*Nb]; //encrypted message
+	// byte* input = new byte[4*Nb];  //message to be encrypted
+	byte* input;
+	// byte* output = new byte[4*Nb]; //encrypted message
+	byte* output;
 	int keyLen;
 	cout << "Enter key length 128, 192, or 256\n";
 	cin >> keyLen;
-	switch(keyLen)
-	{
-		case 128:
-			Nk = 4;   	// Nk (key length 128, 192, 256) = 4, 6, 8 reflects the number of 32 bit words 
-			Nr = 10;	// or the number of columns in the cipher key
-			break;		// Nr (number of rounds) depends on key length = 10, 12, 14
-		case 192:
-			Nk = 6;
-			Nr = 12;
-			break;
-		case 256:
-			Nk = 8;
-			Nr = 14;
-			break;
-		default:
-		throw "Incorrect Key Length";
-	}
-	byte* key = new byte[Nk*Nb];
+	//switch condition !!!!!!!
+	Aes aes(keyLen);
+
+	// byte* key = new byte[Nk*Nb];
+	byte* key;
 	byte** w = new byte*[4]; //allocare memory for rows  (4 bytes)
-	for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
-	{
-		w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
-	}
+	// for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+	// {
+	// 	w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
+	// }
 //-----------------TEST-CASES-FROM-STANDARD-----------------------------------------
 	//128 bit meesage
 	byte message[16] = {0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34};
 	//128 bit key
-	byte cipherKey[Nk*Nb] =  {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-	
+	// byte cipherKey[Nk*Nb] =  {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+	byte cipherKey[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+
 	//192 bit key
 	//byte cipherKey[Nk*Nb] = {0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b, 0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b};
 	
@@ -624,9 +637,9 @@ int main()
 //--------------------------END-TESTS----------------------------------------------------
 	key = cipherKey;
 	input = message;
-	w = KeyExpansion(key, w, Nk); //make the key schedule
+	w = aes.KeyExpansion(key, w); //make the key schedule
 
-	output = Cipher(input, w); //encrypt the message
+	output = aes.Cipher(input, w); //encrypt the message
 
 //--------PRINT-CIPHER-TEXT-----------------
 	cout << "\nThe cipher text is : \n";
@@ -636,7 +649,7 @@ int main()
 	}
 //-------------------------------------------
 
-	output = InvCipher(output, w);  //decrypt the message
+	output = aes.InvCipher(output, w);  //decrypt the message
 
 //------PRINT-ORIGINAL-MESSAGE------------------
 	cout << "\n\nThe original message was : \n";
