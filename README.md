@@ -1,7 +1,7 @@
 # AES
 
 
-GTest: 
+GTest installation for mac: 
 ```
 git clone https://github.com/google/googletest
 cd googletest
