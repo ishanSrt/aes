@@ -608,7 +608,7 @@ byte *Aes::InvCipher(byte *in, byte **w)
 	return stateToBlock(state);  		//put matrix back into array for output
 }
 
-string blockToReadable(byte* inout)
+string Aes::blockToReadable(byte* inout)
 {
 	stringstream stream;
 	for(int i = 0; i < 16; i++)
@@ -625,9 +625,6 @@ string blockToReadable(byte* inout)
 	string result( stream.str() );
 	return result;
 }
-
-
-
 
 
 

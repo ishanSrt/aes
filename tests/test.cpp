@@ -21,11 +21,11 @@ TEST(StdTestCase1, KeyLen128)
 
 	output = aes.Cipher(message, w);
 	string expected = "39 25 84 1d 2 dc 9 fb dc 11 85 97 19 6a b 32";
-	ASSERT_EQ(expected,blockToReadable(output));
+	ASSERT_EQ(expected,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	expected = "32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 7 34";
-	ASSERT_EQ(expected,blockToReadable(output));
+	ASSERT_EQ(expected,aes.blockToReadable(output));
 }
 
 TEST(StdTestCase1, KeyLen192)
@@ -46,11 +46,11 @@ TEST(StdTestCase1, KeyLen192)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "58 5e 9f b6 c2 72 2b 9a f4 f4 92 c1 2b b0 24 c1";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 7 34";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 
 TEST(StdTestCase1, KeyLen256)
@@ -71,11 +71,11 @@ TEST(StdTestCase1, KeyLen256)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "30 21 61 3a 97 3e 58 2f 4a 29 23 41 37 ae c4 94";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 7 34";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -99,11 +99,11 @@ TEST(WrongTestCaseStdTestCase1AesWorkingWith128, KeyLen256)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "6 4a 49 df 5a db e5 9a 23 d2 9a a3 15 b4 e5 3d";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "32 43 f6 a8 88 5a 30 8d 31 31 98 a2 e0 37 7 34";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // WRONG TEST CASE USING 256 bit key but aes algorithm working for 128 bit key ^^^^
@@ -128,11 +128,11 @@ TEST(StdTestCase2, KeyLen128)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "69 c4 e0 d8 6a 7b 4 30 d8 cd b7 80 70 b4 c5 5a";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "0 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 
 TEST(StdTestCase2, KeyLen192)
@@ -153,11 +153,11 @@ TEST(StdTestCase2, KeyLen192)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "dd a9 7c a4 86 4c df e0 6e af 70 a0 ec d 71 91";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "0 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 
 TEST(StdTestCase2, KeyLen256)
@@ -178,11 +178,11 @@ TEST(StdTestCase2, KeyLen256)
 
 	output = aes.Cipher(message, w);
 	string expectedCipher = "8e a2 b7 ca 51 67 45 bf ea fc 49 90 4b 49 60 89";
-	ASSERT_EQ(expectedCipher,blockToReadable(output));
+	ASSERT_EQ(expectedCipher,aes.blockToReadable(output));
 
 	output = aes.InvCipher(output, w);  //decrypt the message
 	string expectedMessage = "0 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff";
-	ASSERT_EQ(expectedMessage,blockToReadable(output));
+	ASSERT_EQ(expectedMessage,aes.blockToReadable(output));
 }
 
 int main(int argc, char **argv)

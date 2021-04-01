@@ -34,12 +34,13 @@ class Aes
 		int getNb();
 
 		byte **KeyExpansion(byte *key, byte **w);
+		string blockToReadable(byte* inout);
 
 		Aes(int keyLen);
 		byte *Cipher(byte *in, byte **w);
 		byte *InvCipher(byte *in, byte **w);
 };
-string blockToReadable(byte* inout);
+
 
 
 
