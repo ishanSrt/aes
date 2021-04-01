@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -28,12 +29,17 @@ class Aes
 		
 
 	public:
-		byte **KeyExpansion(byte *key, byte **w); // needs to be made private later on
+		int getNk();
+		int getNr();
+		int getNb();
+
+		byte **KeyExpansion(byte *key, byte **w);
 
 		Aes(int keyLen);
 		byte *Cipher(byte *in, byte **w);
 		byte *InvCipher(byte *in, byte **w);
 };
+string blockToReadable(byte* inout);
 
 
 
