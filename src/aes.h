@@ -26,15 +26,22 @@ class Aes
 		byte *Rcon(byte *a, int n);
 		byte **blockToState(byte *w);
 		byte *stateToBlock(byte **state);
-		
+		byte *addPadding(int len, int messageLen, byte *input);
+		byte *getPaddedMessage(byte *input, int messageLen);
+		byte *removePadding(byte* message, int len);
+		int paddingStartIndex(byte* message, int len);
 
 	public:
 		int getNk();
 		int getNr();
 		int getNb();
 
+		
+		byte *encryptECB(byte* input, int messageLen, byte* key);
+		byte *decryptECB(byte* cipher, int cipherLen, byte* key);
+
 		byte **KeyExpansion(byte *key, byte **w);
-		string blockToReadable(byte* inout);
+		string blockToReadable(byte* inout, int len);
 
 		Aes(int keyLen);
 		byte *Cipher(byte *in, byte **w);

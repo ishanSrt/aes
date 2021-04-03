@@ -608,12 +608,12 @@ byte *Aes::InvCipher(byte *in, byte **w)
 	return stateToBlock(state);  		//put matrix back into array for output
 }
 
-string Aes::blockToReadable(byte* inout)
+string Aes::blockToReadable(byte* inout, int len=16)
 {
 	stringstream stream;
-	for(int i = 0; i < 16; i++)
+	for(int i = 0; i < len; i++)
 	{
-		if(i!=15)
+		if(i!=len-1)
 		{
 			stream << hex << (int)inout[i] << " ";
 		}
@@ -624,6 +624,152 @@ string Aes::blockToReadable(byte* inout)
 	}
 	string result( stream.str() );
 	return result;
+}
+
+byte *Aes::addPadding(int len, int messageLen, byte *input)
+{
+	byte one = 0x01;
+	byte padding[len];
+	padding[0] = one;
+	for(int i=0;i<len-1;i++)
+	{
+		padding[i+1] = 0x00;
+	}
+	int inputsize = messageLen;
+	int paddedLen = len+inputsize;
+	byte* paddedMessage = new byte[paddedLen];
+
+	for(int i=0;i<inputsize;i++)
+	{
+		paddedMessage[i] = input[i];
+	}
+	
+	for(int i=0;i<len;i++)
+	{
+		paddedMessage[i+inputsize] = padding[i];
+	}
+	return paddedMessage;
+}
+
+byte *Aes::getPaddedMessage(byte* input, int messageLen)
+{
+	int len;
+	int inputsize = messageLen;
+	if(inputsize%16==0)
+	{
+		len = 16;
+	}
+	else
+	{
+		len = 16-inputsize%16;
+	}
+	byte* paddedMessage = new byte[len+inputsize];
+	paddedMessage = addPadding(len, inputsize, input);
+
+	return paddedMessage;
+}
+
+byte *Aes::encryptECB(byte* input, int messageLen, byte* key)
+{
+	byte* paddedMessage = getPaddedMessage(input, messageLen);
+	int paddedMessageLen = messageLen + 16-messageLen%16;
+	byte* output = new byte[paddedMessageLen];
+
+	byte** w = new byte*[4]; //allocate memory for rows  (4 bytes)
+	for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+	{
+		w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
+	}
+	
+	w = KeyExpansion(key, w);
+
+	for(int i=0;i<paddedMessageLen/16;i++)
+	{
+		byte* currentBlock = new byte[16];
+		byte* outputBlock = new byte[16];
+		for(int j=0;j<16;j++)
+		{
+			currentBlock[j] = paddedMessage[i*16+j];
+		}
+	
+		outputBlock = Cipher(currentBlock, w);
+		for(int j=0; j<16;j++)
+		{
+			output[i*16+j] = outputBlock[j];
+		}
+	}
+	return output;
+}
+
+byte *Aes::removePadding(byte* message, int len)
+{
+	// add checks for invalid padding of message???
+	int index = paddingStartIndex(message, len);
+	byte* messageWithoutPadding = new byte[index];
+	for(int i=0;i<len;i++)
+	{
+		messageWithoutPadding[i] = message[i];
+	}
+	return messageWithoutPadding;
+}
+
+int Aes::paddingStartIndex(byte* message, int len)
+{
+	int index = -1;
+	for(int i=len-1;i>=0;i--)
+	{
+		if(message[i] == 0x01)
+		{
+			index = i;
+			break;
+		}
+	}
+	return index;
+}
+
+byte *Aes::decryptECB(byte* cipher, int cipherLen, byte* key)
+{
+	byte* message = new byte[cipherLen];
+
+	byte** w = new byte*[4]; //allocate memory for rows  (4 bytes)
+	for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+	{
+		w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
+	}
+	
+	w = KeyExpansion(key, w);
+
+	for(int i=0;i<cipherLen/16;i++)
+	{
+		byte* currentBlock = new byte[16];
+		byte* messageBlock = new byte[16];
+		for(int j=0;j<16;j++)
+		{
+			currentBlock[j] = cipher[i*16+j];
+		}
+		messageBlock = InvCipher(currentBlock, w);
+
+		for(int j=0; j<16;j++)
+		{
+			message[i*16+j] = messageBlock[j];
+		}
+	}
+	return removePadding(message, cipherLen);
+}
+
+int main()
+{
+	Aes aes(128);
+	byte cipherKey[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+	byte expectedCipher[32] = {0x39, 0x25, 0x84, 0x1d, 0x02, 0xdc, 0x09, 0xfb, 0xdc, 0x11, 0x85, 0x97, 0x19, 0x6a, 0x0b, 0x32, 
+							   0x7e, 0x59, 0x37, 0x9b, 0x52, 0x33, 0x96, 0x9d, 0x25, 0xa5, 0xad, 0x2c, 0xe3, 0x35, 0xcb, 0x3e};
+	cout<<"Hello WOlrd";
+	byte* output = aes.decryptECB(expectedCipher, 32, cipherKey);
+	for(int i = 0;i< 16; i++)
+	{
+		cout<<hex<<(int)output[i]<<" ";
+	}
+	return 0;
 }
 
 
