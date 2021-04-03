@@ -40,6 +40,9 @@ class Aes
 		byte *encryptECB(byte* input, int messageLen, byte* key);
 		byte *decryptECB(byte* cipher, int cipherLen, byte* key);
 
+		byte *encryptCBC(byte *input, int messageLen, byte *key, byte *IV);
+		byte *decryptCBC(byte *cipher, int cipherLen, byte *key, byte *IV);
+
 		byte **KeyExpansion(byte *key, byte **w);
 		string blockToReadable(byte* inout, int len);
 
