@@ -805,11 +805,6 @@ byte *Aes::encryptCBC(byte *input, int messageLen, byte *key, byte *IV)
 		{
 			output[i * 16 + j] = outputBlock[j];
 		}
-
-		// delete[] currentBlock;
-		// delete[] currentInput;
-		// delete[] outputBlock;
-		// delete[] w;
 	}
 	return output;
 }
@@ -862,8 +857,182 @@ byte *Aes::decryptCBC(byte *cipher, int cipherLen, byte *key, byte *IV)
 		previousCipherBlock = currentBlock;
 	}
 	// return removePadding(message, cipherLen); // resulting in a memmory allocation error,
-	//memory going out of bounds while creating a new messagewithoutpadding in removepadding
+	// memory going out of bounds while creating a new messagewithoutpadding in removepadding
 	return message;
+}
+
+byte *Aes::encryptOFB(byte *input, int messageLen, byte *key, byte *IV)
+{
+	byte *cipher = new byte[messageLen];
+
+	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+	{
+		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+	}
+
+	w = KeyExpansion(key, w);
+
+	byte *previousOutputBlock = new byte[16];
+
+	double limit = (double)messageLen / 16;
+
+	for (double i = 0; i < limit; i++)
+	{
+		byte *currentBlock = new byte[16];
+		byte *currentInput = new byte[16];
+		byte *outputBlock = new byte[16];
+		byte *cipherBlock = new byte[16];
+		
+		if(!(i==floor(messageLen/16)))
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				currentBlock[j] = input[(int)i * 16 + j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				currentBlock[j] = input[(int)i * 16 + j];
+			}
+		}
+
+		if((int)i==0)
+		{
+			for(int j=0;j<16;j++)
+			{
+				currentInput[j] = IV[j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				currentInput[j] = previousOutputBlock[j];
+			}
+		}
+		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+
+		outputBlock = Cipher(currentInput, w);
+		previousOutputBlock = outputBlock;
+		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+
+		if(!(i==floor(messageLen/16)))
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+			}
+			for (int j = 0; j < 16; j++)
+			{
+				cipher[(int)i * 16 + j] = cipherBlock[j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+			}
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				cipher[(int)i * 16 + j] = cipherBlock[j];
+			}
+		}	
+		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+	}
+	return cipher;
+}
+
+byte *Aes::decryptOFB(byte *input, int messageLen, byte *key, byte *IV)
+{
+	// don't be misled by variable names, this is actually the decrypt function
+	// Its just most of it was copy pasta
+	byte *cipher = new byte[messageLen];
+
+	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+	{
+		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+	}
+
+	w = KeyExpansion(key, w);
+
+	byte *previousOutputBlock = new byte[16];
+
+	double limit = (double)messageLen / 16;
+
+	for (double i = 0; i < limit; i++)
+	{
+		byte *currentBlock = new byte[16];
+		byte *currentInput = new byte[16];
+		byte *outputBlock = new byte[16];
+		byte *cipherBlock = new byte[16];
+		
+		if(!(i==floor(messageLen/16)))
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				currentBlock[j] = input[(int)i * 16 + j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				currentBlock[j] = input[(int)i * 16 + j];
+			}
+		}
+
+		if((int)i==0)
+		{
+			for(int j=0;j<16;j++)
+			{
+				currentInput[j] = IV[j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				currentInput[j] = previousOutputBlock[j];
+			}
+		}
+		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+
+		outputBlock = Cipher(currentInput, w);
+		previousOutputBlock = outputBlock;
+		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+
+		if(!(i==floor(messageLen/16)))
+		{
+			for (int j = 0; j < 16; j++)
+			{
+				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+			}
+			for (int j = 0; j < 16; j++)
+			{
+				cipher[(int)i * 16 + j] = cipherBlock[j];
+			}
+		}
+		else
+		{
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+			}
+			for (int j = 0; j < messageLen-(int)i*16; j++)
+			{
+				cipher[(int)i * 16 + j] = cipherBlock[j];
+			}
+		}	
+		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+	}
+	return cipher;
 }
 
 // int main()

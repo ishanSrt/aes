@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 using namespace std;
 
@@ -42,6 +43,9 @@ class Aes
 
 		byte *encryptCBC(byte *input, int messageLen, byte *key, byte *IV);
 		byte *decryptCBC(byte *cipher, int cipherLen, byte *key, byte *IV);
+
+		byte *encryptOFB(byte *cipher, int cipherLen, byte *key, byte *IV);
+		byte *decryptOFB(byte *cipher, int cipherLen, byte *key, byte *IV);
 
 		byte **KeyExpansion(byte *key, byte **w);
 		string blockToReadable(byte* inout, int len);
