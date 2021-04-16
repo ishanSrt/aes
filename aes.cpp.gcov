@@ -1,0 +1,1348 @@
+        -:    0:Source:src/aes.cpp
+        -:    0:Graph:test.gcno
+        -:    0:Data:test.gcda
+        -:    0:Runs:1
+        -:    1:/**
+        -:    2:* CSE 539 Semester Project 
+        -:    3:*
+        -:    4:* Group Members: Klowee Malakowsky, Ishan Srivastava
+        -:    5:*
+        -:    6:* Implementaion of the Advanced Encryption Standard
+        -:    7:* (Rijndael algorithm)
+        -:    8:*/
+        -:    9:
+        -:   10:#include "aes.h"
+        -:   11://#define Nb 4 //Nb is the Number of columns (32-bit words) comprising the State. 
+        -:   12://For this standard, Nb = 4.
+        -:   13://int Nk; //Nk is the Number of 32-bit words comprising the Cipher Key.
+        -:   14://For this standard, Nk = 4, 6, or 8
+        -:   15://int Nr; //Nr is the Number of rounds, which is a function of Nk and Nb. 
+        -:   16://For this standard, Nr = 10, 12, or 14. 
+        -:   17:
+       13:   18:Aes::Aes(int keyLen)
+        -:   19:{
+       13:   20:	this->Nb = 4;
+       13:   21:	switch (keyLen)
+        -:   22:	{
+        9:   23:		case 128:
+        9:   24:			Nk = 4;	 // Nk (key length 128, 192, 256) = 4, 6, 8 reflects the number of 32 bit words
+        9:   25:			Nr = 10; // or the number of columns in the cipher key
+        9:   26:			break;	 // Nr (number of rounds) depends on key length = 10, 12, 14
+        2:   27:		case 192:
+        2:   28:			Nk = 6;
+        2:   29:			Nr = 12;
+        2:   30:			break;
+        2:   31:		case 256:
+        2:   32:			Nk = 8;
+        2:   33:			Nr = 14;
+        2:   34:			break;
+    #####:   35:		default:
+    #####:   36:			throw "Incorrect Key Length";
+        -:   37:	}
+       13:   38:}
+        -:   39:
+        6:   40:int Aes::getNk()
+        -:   41:{
+        6:   42:	return Nk;
+        -:   43:}
+        -:   44:
+       28:   45:int Aes::getNr()
+        -:   46:{
+       28:   47:	return Nr;
+        -:   48:}
+        -:   49:
+       34:   50:int Aes::getNb()
+        -:   51:{
+       34:   52:	return Nb;
+        -:   53:}
+        -:   54:
+        -:   55:/**
+        -:   56:* Shifts the rows in the state
+        -:   57:*
+        -:   58:* Used as part of the transformation proccess in the cipher
+        -:   59:*
+        -:   60:* @param s is the state
+        -:   61:* @return the new state after shifting rows
+        -:   62:*/
+      402:   63:byte** Aes::ShiftRows(byte** s)
+        -:   64:{
+      402:   65:	byte** temp = new byte*[4]; //declare a temp array to hold all the original values of s
+        -:   66:	//Allocate array (size 4) of byte pointers (rows)
+     2010:   67:	for(int i = 0; i < 4; i++)
+        -:   68:	{
+     1608:   69:		temp[i] = new byte[4]; //allocate space for columns
+        -:   70:	}
+        -:   71:
+     2010:   72:	for(int i = 0; i < 4; i++) 
+        -:   73:	{
+     8040:   74:		for(int j = 0; j < 4; j++)
+        -:   75:		{
+     6432:   76:			temp[i][j] = s[i][j]; //store all of the value of s in temp
+        -:   77:		}
+        -:   78:	}
+        -:   79:
+     1608:   80:	for(int i = 1; i < 4; i++) //shift the rows
+        -:   81:	{ 
+     3618:   82:		for(int j = i; j > 0; j--) 
+        -:   83:		{
+     2412:   84:			s[i][0] = temp[i][1]; //slide the second byte to the first
+     2412:   85:			s[i][1] = temp[i][2]; //slide third byte to the second
+     2412:   86:			s[i][2] = temp[i][3]; //slide the last byte to the third
+     2412:   87:			s[i][3] = temp[i][0]; //set the last byte to the first 
+        -:   88:
+     2412:   89:			temp[i][0] = s[i][0];
+     2412:   90:			temp[i][1] = s[i][1];  //update the temp array
+     2412:   91:			temp[i][2] = s[i][2];
+     2412:   92:			temp[i][3] = s[i][3];
+        -:   93:		}
+        -:   94:	}
+        -:   95:	//free the memory allocated for temp
+      402:   96:	return s;
+        -:   97:}
+        -:   98:
+        -:   99:/**
+        -:  100:* Shifts the rows in the state
+        -:  101:*
+        -:  102:* Used as part of the transformation proccess in the inverse cipher
+        -:  103:*
+        -:  104:* @param s is the state
+        -:  105:* @return the new state after shifting rows
+        -:  106:*/
+      152:  107:byte **Aes::InvShiftRows(byte **s)
+        -:  108:{
+      152:  109:	byte** temp = new byte*[4]; //temp array to hold the original values of s
+      760:  110:	for(int i = 0; i < 4; i++)  //Allocate array (size 4) of byte pointers (rows)
+        -:  111:	{
+      608:  112:		temp[i] = new byte[4]; //allocate space for columns
+        -:  113:	}
+      760:  114:	for(int i = 0; i < 4; i++)
+        -:  115:	{
+     3040:  116:		for(int j = 0; j < 4; j++)
+        -:  117:		{
+     2432:  118:			temp[i][j] = s[i][j];   //store all of the value of s in temp
+        -:  119:		}
+        -:  120:	}
+        -:  121:
+      608:  122:	for(int i = 1; i < 4; i++) //shift the rows
+        -:  123:	{
+     1368:  124:		for(int j = i; j > 0; j--) 
+        -:  125:		{
+      912:  126:			s[i][0] = temp[i][3]; //slide the last byte back to the first
+      912:  127:			s[i][1] = temp[i][0]; //slide first byte back to the second
+      912:  128:			s[i][2] = temp[i][1]; //slide the second byte back to the third
+      912:  129:			s[i][3] = temp[i][2]; //set the third byte back to the first 
+        -:  130:
+      912:  131:			temp[i][0] = s[i][0];
+      912:  132:			temp[i][1] = s[i][1];  //update temp
+      912:  133:			temp[i][2] = s[i][2];
+      912:  134:			temp[i][3] = s[i][3];
+        -:  135:		}
+        -:  136:	}
+        -:  137:	//free the memory allocated for temp
+        -:  138:	/*for(int i = 0; i < 4; i++)
+        -:  139:	{
+        -:  140:		delete[] temp[i];
+        -:  141:	}
+        -:  142:	delete[] temp;
+        -:  143:	*/
+      152:  144:	return s;
+        -:  145:}
+        -:  146:
+        -:  147:/**
+        -:  148:* Substitutes each byte in the state with one from s-box
+        -:  149:*
+        -:  150:* Used as part of the transformation proccess in the cipher
+        -:  151:*
+        -:  152:* @param s is the state
+        -:  153:* @return the new state after substitions
+        -:  154:*/
+      402:  155:byte **Aes::SubBytes(byte **s)
+        -:  156:{	
+        -:  157:	byte valueRow;   	//will be the value of the row to find in s-box
+        -:  158:	byte valueCol;		//will be the value of teh column to find in s-box
+      402:  159:	byte sixteen = 0x10;
+        -:  160:
+     2010:  161:	for(int i = 0; i < 4; i++)  
+        -:  162:	{
+     8040:  163:		for(int j = 0; j < 4; j++)
+        -:  164:		{
+     6432:  165:			valueRow = (s[i][j]) / sixteen; 	//gets the row
+     6432:  166:			valueCol = (s[i][j]) % sixteen; 	//gets the column
+     6432:  167:			s[i][j] = sBox[valueRow][valueCol]; //find the value in s-box to substitute
+        -:  168:		}
+        -:  169:	}
+      402:  170:	return s;
+        -:  171:}
+        -:  172:
+        -:  173:/**
+        -:  174:* Substitutes each byte in the state with one from the inverse s-box
+        -:  175:*
+        -:  176:* Used as part of the transformation proccess in the inverse cipher
+        -:  177:*
+        -:  178:* @param s is the state
+        -:  179:* @return the new state after substitions
+        -:  180:*/
+      152:  181:byte **Aes::InvSubBytes(byte **s)
+        -:  182:{
+        -:  183:	byte valueRow;		//will be the value of the row to find in s-box
+        -:  184:	byte valueCol;		//will be the value of teh column to find in s-box
+      152:  185:	byte sixteen = 0x10;
+        -:  186:
+      760:  187:	for(int i = 0; i < 4; i++)
+        -:  188:	{
+     3040:  189:		for(int j = 0; j < 4; j++)
+        -:  190:		{
+     2432:  191:			valueRow = (s[i][j]) / sixteen;  		//gets the row
+     2432:  192:			valueCol = (s[i][j]) % sixteen;  		//gets the column
+     2432:  193:			s[i][j] = invsBox[valueRow][valueCol];	//find the value in inverse s-box to substitute
+        -:  194:		}
+        -:  195:	}
+      152:  196:	return s;
+        -:  197:}
+        -:  198:
+        -:  199:/**
+        -:  200:* Mixes the columns in the state
+        -:  201:*
+        -:  202:* Used as part of the transformation proccess in the cipher
+        -:  203:*
+        -:  204:* @param s is the state
+        -:  205:* @return the new state after mixing the columns
+        -:  206:*/
+      363:  207:byte **Aes::MixColumns(byte **s)
+        -:  208:{
+      363:  209:	byte** temp = new byte*[4]; //allocate memory for pointer array
+     1815:  210:	for(int i = 0; i < 4; i ++)
+        -:  211:	{
+     1452:  212:		temp[i] = new byte[4]; //allocate memory for columns 
+        -:  213:	}
+        -:  214:
+        -:  215:	//{0x02, 0x03, 0x01, 0x01} 
+        -:  216:	//{0x01, 0x02, 0x03, 0x01}      'a' : matrix to multiply by
+        -:  217:	//{0x01, 0x01, 0x02, 0x03}
+        -:  218:	//{0x03, 0x01, 0x01, 0x02}
+        -:  219:
+      363:  220:	byte sixteen = 0x10;
+        -:  221:	byte zero, one, two, three; 
+        -:  222:
+     1815:  223:	for(int i = 0; i < 4; i++) //column
+        -:  224:	{
+     7260:  225:		for(int j = 0; j < 4; j++)  //row
+        -:  226:		{ //check which row of 'a' to multiply with and calculate the values using look up tables
+     5808:  227:			if(j == 0){
+     1452:  228:				zero = mult2[s[0][i]/sixteen][s[0][i]%sixteen];
+     1452:  229:				one = mult3[s[1][i]/sixteen][s[1][i]%sixteen];
+     1452:  230:				two = s[2][i];
+     1452:  231:				three = s[3][i];
+        -:  232:			}
+     4356:  233:			else if(j == 1)
+        -:  234:			{
+     1452:  235:				zero = s[0][i];
+     1452:  236:				one = mult2[s[1][i]/sixteen][s[1][i]%sixteen];
+     1452:  237:				two = mult3[s[2][i]/sixteen][s[2][i]%sixteen];
+     1452:  238:				three = s[3][i];
+        -:  239:			}
+     2904:  240:			else if(j == 2)
+        -:  241:			{
+     1452:  242:				zero = s[0][i];
+     1452:  243:				one = s[1][i];
+     1452:  244:				two = mult2[s[2][i]/sixteen][s[2][i]%sixteen];
+     1452:  245:				three = mult3[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  246:			}
+        -:  247:			else
+        -:  248:			{
+     1452:  249:				zero = mult3[s[0][i]/sixteen][s[0][i]%sixteen];
+     1452:  250:				one = s[1][i];
+     1452:  251:				two = s[2][i];
+     1452:  252:				three = mult2[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  253:			}	
+     5808:  254:			temp[j][i] = (zero ^ one ^ two ^ three); //xor the values together 
+        -:  255:		}
+        -:  256:	}
+        -:  257:/*
+        -:  258:	for(int i = 0; i < 4; i++)
+        -:  259:	{			
+        -:  260:		for(int j = 0; j < 4; j++)
+        -:  261:		{
+        -:  262:			s[i][j] = temp[i][j];
+        -:  263:		}
+        -:  264:	}*/
+        -:  265:
+        -:  266:	//delete temp
+      363:  267:	return temp;
+        -:  268:}
+        -:  269:
+        -:  270:/**
+        -:  271:* Mixes the columns in the state
+        -:  272:*
+        -:  273:* Used as part of the transformation proccess in the inverse cipher
+        -:  274:*
+        -:  275:* @param s is the state
+        -:  276:* @return the new state after mixing columns
+        -:  277:*/
+      138:  278:byte **Aes::InvMixColumns(byte **s)
+        -:  279:{ 
+      138:  280:	byte** temp = new byte*[4]; //Allocate array (size 4) of byte pointers (rows);
+      690:  281:	for(int i = 0; i < 4; i++)
+        -:  282:	{
+      552:  283:		temp[i] = new byte[4]; //allocate space for columns
+        -:  284:	}
+        -:  285:	
+        -:  286:	//{0x0e, 0x0b, 0x0d, 0x09}        0x0b = 11   0x0d = 13   0x0e = 14
+        -:  287:	//{0x09, 0x0e, 0x0b, 0x0d}
+        -:  288:	//{0x0d, 0x09, 0x0e, 0x0b}			'a' : matrix to multiply by
+        -:  289:	//{0x0b, 0x0d, 0x09, 0x0e}
+      138:  290:	byte sixteen = 0x10;
+        -:  291:	byte zero, one, two, three;
+      690:  292:	for(int i = 0; i < 4; i++) //column
+        -:  293:	{
+     2760:  294:		for(int j = 0; j < 4; j++)  //row
+        -:  295:		{ //check which row of 'a' to multiply with and calculate the values using look up tables
+     2208:  296:			if(j == 0){
+      552:  297:				zero = multE[s[0][i]/sixteen][s[0][i]%sixteen];
+      552:  298:				one = multB[s[1][i]/sixteen][s[1][i]%sixteen];
+      552:  299:				two = multD[s[2][i]/sixteen][s[2][i]%sixteen];
+      552:  300:				three = mult9[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  301:			}
+     1656:  302:			else if(j == 1)
+        -:  303:			{
+      552:  304:				zero = mult9[s[0][i]/sixteen][s[0][i]%sixteen];
+      552:  305:				one = multE[s[1][i]/sixteen][s[1][i]%sixteen];
+      552:  306:				two = multB[s[2][i]/sixteen][s[2][i]%sixteen];
+      552:  307:				three = multD[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  308:			}
+     1104:  309:			else if(j == 2)
+        -:  310:			{
+      552:  311:				zero = multD[s[0][i]/sixteen][s[0][i]%sixteen];
+      552:  312:				one = mult9[s[1][i]/sixteen][s[1][i]%sixteen];
+      552:  313:				two = multE[s[2][i]/sixteen][s[2][i]%sixteen];
+      552:  314:				three = multB[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  315:			}
+        -:  316:			else
+        -:  317:			{
+      552:  318:				zero = multB[s[0][i]/sixteen][s[0][i]%sixteen];
+      552:  319:				one = multD[s[1][i]/sixteen][s[1][i]%sixteen];
+      552:  320:				two = mult9[s[2][i]/sixteen][s[2][i]%sixteen];
+      552:  321:				three = multE[s[3][i]/sixteen][s[3][i]%sixteen];
+        -:  322:			}	
+     2208:  323:			temp[j][i] = (zero ^ one ^ two ^ three); //xor the values together 
+        -:  324:		}
+        -:  325:	}
+        -:  326:	//need to delete s
+      138:  327:	return temp;
+        -:  328:}
+        -:  329:
+        -:  330:/**
+        -:  331:* XORs a round key from the key schedule with the state
+        -:  332:*
+        -:  333:* Used as part of the transformation proccess in the cipher and inverse cipher
+        -:  334:*
+        -:  335:* @param s is the state
+        -:  336:* @param w is the key schedule
+        -:  337:* @param round is the round number the cipher/inverse cipher is on
+        -:  338:* @return the new state after XORing the round key 
+        -:  339:*/
+      607:  340:byte **Aes::AddRoundKey(byte **s, byte **w, int round)
+        -:  341:{
+     3035:  342:	for(int i = 0; i < 4; i ++)
+        -:  343:	{
+    12140:  344:		for(int j = 0; j < 4; j++)
+        -:  345:		{
+     9712:  346:			s[i][j] = s[i][j] ^ w[i][4*round+j]; //get the columns for the correct round
+        -:  347:		}
+        -:  348:	}
+      607:  349:	return s;
+        -:  350:}
+        -:  351:
+        -:  352:/**
+        -:  353:* Multiplies a byte with polynomial x
+        -:  354:*
+        -:  355:* Multiplication is performed with left shift and bitwise XOR with 0x1b
+        -:  356:*
+        -:  357:* @param b is the byte to multiply with x
+        -:  358:* @return the resulting byte after multiplication with x
+        -:  359:*/
+      683:  360:byte Aes::xtime(byte b) // multiplication by x
+        -:  361:{
+      683:  362:	if((b>>7) == 1)
+        -:  363:	{
+       26:  364:		return (b<<1) ^ 0x1b;  
+        -:  365:	}
+        -:  366:	else
+        -:  367:	{
+      657:  368:		return (b<<1);
+        -:  369:	}
+        -:  370:}
+        -:  371:
+        -:  372:/**
+        -:  373:* Generates round constant
+        -:  374:*
+        -:  375:* Used during the key expansion process
+        -:  376:*
+        -:  377:* @param b is a byte pointer 
+        -:  378:* @param n is the round 
+        -:  379:* @return the resulting round constant rcon
+        -:  380:*/
+      160:  381:byte *Aes::Rcon(byte *a, int n)
+        -:  382:{
+      160:  383:	byte c = 1;
+      843:  384:	for(int i=1; i<n; i++)
+        -:  385:	{
+      683:  386:		c = xtime(c);
+        -:  387:	}
+      160:  388:	a[0] = c;
+      160:  389:	a[1] = 0;
+      160:  390:	a[2] = 0;
+      160:  391:	a[3] = 0;
+        -:  392:
+      160:  393:	return a;
+        -:  394:}
+        -:  395:
+        -:  396:/**
+        -:  397:* Uses s-box to substitue values to creale a new word
+        -:  398:*
+        -:  399:* Used during the key expansion process
+        -:  400:*
+        -:  401:* @param w is the word 
+        -:  402:* @return the resulting word after substitution
+        -:  403:*/
+      172:  404:byte *Aes::SubWord(byte *w)
+        -:  405:{
+        -:  406:	byte valueRow;   
+        -:  407:	byte valueCol;
+      172:  408:	byte sixteen = 0x10;
+      860:  409:	for(int i = 0; i < 4; i++)
+        -:  410:	{
+      688:  411:		valueRow = (w[i]) / sixteen;  		//find the row
+      688:  412:		valueCol = (w[i]) % sixteen;		//find the value
+      688:  413:		w[i] = sBox[valueRow][valueCol];	//find the value in s-box to replace the original value
+        -:  414:	}
+      172:  415:	return w;
+        -:  416:}
+        -:  417:
+        -:  418:/**
+        -:  419:* Performs cyclic permutation
+        -:  420:*
+        -:  421:* Used during the key expansion process
+        -:  422:*
+        -:  423:* @param w is the word 
+        -:  424:* @return the resulting word after cyclic permutation
+        -:  425:*/
+      160:  426:byte *Aes::RotWord(byte *w)
+        -:  427:{
+      160:  428:	byte* temp = new byte[4]; //allocate memory for  temp 
+      800:  429:	for(int i =0; i < 4; i++)
+        -:  430:	{
+      640:  431:		temp[i] = w[i]; //assign the original values of w to temp
+        -:  432:	}
+      160:  433:	w[0] = temp[1];  //rotate the value in w
+      160:  434:	w[1] = temp[2];
+      160:  435:	w[2] = temp[3];
+      160:  436:	w[3] = temp[0];
+      160:  437:	return w;
+        -:  438:}
+        -:  439:
+        -:  440:/**
+        -:  441:* Generates key schedule from original key for a total of Nb(Nr + 1) words
+        -:  442:*
+        -:  443:* @param key is the original random key
+        -:  444:* @param w is the key schedule
+        -:  445:* @param Nk is the number of 4 byte words in the cipher key 
+        -:  446:* @return the resulting key schedule
+        -:  447:*/
+       17:  448:byte **Aes::KeyExpansion(byte *key, byte **w) // generates a total of Nb(Nr + 1) words
+        -:  449:{ 
+        -:  450:
+       17:  451:	byte* temp = new byte[4]; 	//allocate memory for a temp word
+       17:  452:	byte* rcon = new byte[4];	//allocate memory for the round contsant
+        -:  453:
+       97:  454:	for(int i = 0; i < Nk; i++)  //fill the first 4 columns of w with the random key values
+        -:  455:	{
+      400:  456:		for(int j = 0; j < 4; j++)
+        -:  457:		{
+      320:  458:			w[j][i] = key[4*i+j];
+        -:  459:		}
+        -:  460:	}
+        -:  461:	
+      733:  462:	for(int i = Nk; i < 4 * Nb * (Nr+1); i++)  //fill the remaining columns 
+        -:  463:	{
+      733:  464:		if(i == (Nb*(Nr+1)))		//check to see if the number of rounds has been reached
+        -:  465:		{
+       17:  466:			break;
+        -:  467:		}
+      716:  468:		temp[0] = w[0][i-1];   	//set temp to the word in the previous column,
+      716:  469:		temp[1] = w[1][i-1];	//the perviously generated word
+      716:  470:		temp[2] = w[2][i-1];
+      716:  471:		temp[3] = w[3][i-1];
+        -:  472:
+      716:  473:		if(i % Nk == 0)    //check if the round is a multiple of 4
+        -:  474:		{
+      160:  475:			temp = RotWord(temp);
+      160:  476:			temp = SubWord(temp);
+      160:  477:			rcon = Rcon(rcon, i/(Nk));
+        -:  478:
+      160:  479:			temp[0] = temp[0] ^ rcon[0];
+      160:  480:			temp[1] = temp[1] ^ rcon[1];
+      160:  481:			temp[2] = temp[2] ^ rcon[2];
+      160:  482:			temp[3] = temp[3] ^ rcon[3];
+        -:  483:		}
+      556:  484:		else if (Nk > 6 && i % Nk == 4)   	//if using a 256 bit key  Nk would be 8
+        -:  485:		{									//check if the round % 8 is 4
+       12:  486:			temp = SubWord(temp);
+        -:  487:		}
+        -:  488:
+      716:  489:		w[0][i] = w[0][i-Nk] ^ temp[0];  //fill the column with the key that was generated
+      716:  490:		w[1][i] = w[1][i-Nk] ^ temp[1];
+      716:  491:		w[2][i] = w[2][i-Nk] ^ temp[2];
+      716:  492:		w[3][i] = w[3][i-Nk] ^ temp[3];	
+        -:  493:	}
+        -:  494:	//delete temp and rcon
+       17:  495:	return w;
+        -:  496:}
+        -:  497:
+        -:  498:/**
+        -:  499:* Takes a byte pointer and makes it into a matrix
+        -:  500:*
+        -:  501:* @param inout is the byte pointer to change into a matrix
+        -:  502:* @return a double byte pointer to the resulting matrix 
+        -:  503:*/
+       53:  504:byte **Aes::blockToState(byte *inout)
+        -:  505:{
+       53:  506:	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
+      265:  507:	for(int i = 0; i < 4; i++)
+        -:  508:	{
+      212:  509:		state[i] = new byte[4]; //allocate space for columns
+        -:  510:	}
+        -:  511:
+      265:  512:	for(int i = 0; i < 4; i++) //convert array into matrix
+        -:  513:	{
+     1060:  514:		for(int j=0; j<4; j++)
+        -:  515:		{
+      848:  516:			state[i][j] = inout[i+4*j];
+        -:  517:		}
+        -:  518:	}
+       53:  519:	return state;
+        -:  520:}
+        -:  521:
+        -:  522:/**
+        -:  523:* Takes a matrix, double byte pointer and makes it into a byte array
+        -:  524:*
+        -:  525:* @param state is the matrix to change into a single array
+        -:  526:* @return a byte pointer to the resulting array
+        -:  527:*/
+       53:  528:byte *Aes::stateToBlock(byte **state)
+        -:  529:{
+       53:  530:	byte *inout = new byte[4*Nb]; //Allocate array (size 4) of byte pointers (rows)
+      265:  531:	for(int i = 0; i < 4; i++)
+        -:  532:	{
+     1060:  533:		for(int j = 0; j < 4; j++)
+        -:  534:		{
+      848:  535:			inout[i*4+j] = state[j][i]; //convert matrix into array
+        -:  536:		}
+        -:  537:	}
+       53:  538:	return inout;
+        -:  539:}
+        -:  540:
+        -:  541:/**
+        -:  542:* Encrypts a 128 bit message
+        -:  543:*
+        -:  544:* @param in is the message to be encrypted
+        -:  545:* @param w is the key schedule 
+        -:  546:* @return the encrypted message
+        -:  547:*/
+       39:  548:byte *Aes::Cipher(byte *in, byte **w)
+        -:  549:{
+       39:  550:	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
+      195:  551:	for(int i = 0; i < 4; i++)
+        -:  552:	{
+      156:  553:		state[i] = new byte[4]; //allocate space for columns
+        -:  554:	}
+        -:  555:
+       39:  556:	state = blockToState(in);				//make the input into a matrix
+       39:  557:	state = AddRoundKey(state, w, 0); 		//first call to add round key
+        -:  558:
+      402:  559:	for(int round = 1; round <= (Nr-1); round++)  //loop through rounds
+        -:  560:	{
+      363:  561:		state = SubBytes(state);
+      363:  562:		state = ShiftRows(state);
+      363:  563:		state = MixColumns(state);
+      363:  564:		state = AddRoundKey(state, w, round); 
+        -:  565:	}
+        -:  566:
+       39:  567:	state = SubBytes(state);  			//the last round
+       39:  568:	state = ShiftRows(state);
+       39:  569:	state = AddRoundKey(state, w, Nr); 
+       39:  570:	return stateToBlock(state);			//put matrix back into array for output
+        -:  571:}
+        -:  572:
+        -:  573:/**
+        -:  574:* Decrypts a 128 bit message
+        -:  575:*
+        -:  576:* @param in is the message to be decrypted
+        -:  577:* @param w is the key schedule 
+        -:  578:* @return the decrypted message
+        -:  579:*/
+       14:  580:byte *Aes::InvCipher(byte *in, byte **w)
+        -:  581:{
+       14:  582:	byte** state = new byte*[4]; //allocate memory for the state
+       70:  583:	for(int i = 0; i < 4; i++)
+        -:  584:	{
+       56:  585:		state[i] = new byte[4]; //allocate space for columns
+        -:  586:	}
+       14:  587:	state = blockToState(in);   	//make the input into a matrix
+       14:  588:	state = AddRoundKey(state, w, Nr);  
+        -:  589:
+      152:  590:	for(int round = Nr-1; round > 0; round--) //perform rounds
+        -:  591:	{
+      138:  592:		state = InvShiftRows(state);
+      138:  593:		state = InvSubBytes(state);
+      138:  594:		state = AddRoundKey(state, w , round);
+      138:  595:		state = InvMixColumns(state);
+        -:  596:	}
+        -:  597:
+       14:  598:	state = InvShiftRows(state);  //the last round
+       14:  599:	state = InvSubBytes(state);
+       14:  600:	state = AddRoundKey(state, w, 0);
+       14:  601:	return stateToBlock(state);  		//put matrix back into array for output
+        -:  602:}
+        -:  603:
+        -:  604:/**
+        -:  605:* Takes a byte pointer to a block and makes it readable
+        -:  606:*
+        -:  607:* @param inout is the byte array to make readable (block)
+        -:  608:* @param len is the block length 
+        -:  609:* @return the readable string
+        -:  610:*/
+       24:  611:string Aes::blockToReadable(byte* inout, int len=16)
+        -:  612:{
+       48:  613:	stringstream stream;
+      838:  614:	for(int i = 0; i < len; i++)
+        -:  615:	{
+      814:  616:		if(i!=len-1)
+        -:  617:		{
+      790:  618:			stream << hex << (int)inout[i] << " ";
+        -:  619:		}
+        -:  620:		else
+        -:  621:		{
+       24:  622:			stream << hex << (int)inout[i];
+        -:  623:		}
+        -:  624:	}
+       24:  625:	string result( stream.str() );
+       48:  626:	return result;
+        -:  627:}
+        -:  628:
+        -:  629:/**
+        -:  630:* Adds a specified amount of padding to a message
+        -:  631:*
+        -:  632:* @param len is the amount of padding to add
+        -:  633:* @param messageLen is the total length of the message to encrypt
+        -:  634:* @param input is the message to add padding to
+        -:  635:* @return the message with added padding
+        -:  636:*/
+        2:  637:byte *Aes::addPadding(int len, int messageLen, byte *input)
+        -:  638:{
+        2:  639:	byte one = 0x01;
+        2:  640:	byte padding[len];
+        2:  641:	padding[0] = one;
+       32:  642:	for(int i=0;i<len-1;i++)
+        -:  643:	{
+       30:  644:		padding[i+1] = 0x00;
+        -:  645:	}
+        2:  646:	int inputsize = messageLen;
+        2:  647:	int paddedLen = len+inputsize;
+        2:  648:	byte* paddedMessage = new byte[paddedLen];
+        -:  649:
+       98:  650:	for(int i=0;i<inputsize;i++)
+        -:  651:	{
+       96:  652:		paddedMessage[i] = input[i];
+        -:  653:	}
+        -:  654:	
+       34:  655:	for(int i=0;i<len;i++)
+        -:  656:	{
+       32:  657:		paddedMessage[i+inputsize] = padding[i];
+        -:  658:	}
+        4:  659:	return paddedMessage;
+        -:  660:}
+        -:  661:
+        -:  662:/**
+        -:  663:* Find the amount fo padding to add then calls addPadding
+        -:  664:*
+        -:  665:* @param input is the message to be encrypted 
+        -:  666:* @param messageLen is the length of the message
+        -:  667:* @return the message with padding added
+        -:  668:*/
+        2:  669:byte *Aes::getPaddedMessage(byte* input, int messageLen)
+        -:  670:{
+        -:  671:	int len;
+        2:  672:	int inputsize = messageLen;
+        2:  673:	if(inputsize%16==0)
+        -:  674:	{
+        2:  675:		len = 16;
+        -:  676:	}
+        -:  677:	else
+        -:  678:	{
+    #####:  679:		len = 16-inputsize%16;
+        -:  680:	}
+        2:  681:	byte* paddedMessage = new byte[len+inputsize];
+        2:  682:	paddedMessage = addPadding(len, inputsize, input);
+        -:  683:
+        2:  684:	return paddedMessage;
+        -:  685:}
+        -:  686:
+        -:  687:/**
+        -:  688:* Encrypt a message using ECB mode
+        -:  689:*
+        -:  690:* @param input is the message to be encrypted
+        -:  691:* @param messageLen is the length of the message being encrypted
+        -:  692:* @param key is the randomly generated key
+        -:  693:* @return the encrypted message
+        -:  694:*/
+        1:  695:byte *Aes::encryptECB(byte* input, int messageLen, byte* key)
+        -:  696:{
+        1:  697:	byte* paddedMessage = getPaddedMessage(input, messageLen);
+        1:  698:	int paddedMessageLen = messageLen + 16-messageLen%16;
+        1:  699:	byte* output = new byte[paddedMessageLen];
+        -:  700:
+        1:  701:	byte** w = new byte*[4]; //allocate memory for rows  (4 bytes)
+        5:  702:	for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -:  703:	{
+        4:  704:		w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
+        -:  705:	}
+        -:  706:	
+        1:  707:	w = KeyExpansion(key, w);
+        -:  708:
+        4:  709:	for(int i=0;i<paddedMessageLen/16;i++)
+        -:  710:	{
+        3:  711:		byte* currentBlock = new byte[16];
+        3:  712:		byte* outputBlock = new byte[16];
+       51:  713:		for(int j=0;j<16;j++)
+        -:  714:		{
+       48:  715:			currentBlock[j] = paddedMessage[i*16+j];
+        -:  716:		}
+        -:  717:	
+        3:  718:		outputBlock = Cipher(currentBlock, w);
+       51:  719:		for(int j=0; j<16;j++)
+        -:  720:		{
+       48:  721:			output[i*16+j] = outputBlock[j];
+        -:  722:		}
+        -:  723:	}
+        1:  724:	return output;
+        -:  725:}
+        -:  726:
+        -:  727:/**
+        -:  728:* Removes the padding from a message
+        -:  729:*
+        -:  730:* @param message is the padded message
+        -:  731:* @param len is the length of the padded message
+        -:  732:* @return the original message without padding
+        -:  733:*/
+        1:  734:byte *Aes::removePadding(byte* message, int len)
+        -:  735:{
+        -:  736:	// add checks for invalid padding of message???
+        1:  737:	int index = paddingStartIndex(message, len);
+        1:  738:	byte* messageWithoutPadding = new byte[index];
+       17:  739:	for(int i=0;i<index;i++)
+        -:  740:	{
+       16:  741:		messageWithoutPadding[i] = message[i];
+        -:  742:	}
+        1:  743:	return messageWithoutPadding;
+        -:  744:}
+        -:  745:
+        -:  746:/**
+        -:  747:* Finds the index where the padding starts on the message
+        -:  748:*
+        -:  749:* @param message is the padded message
+        -:  750:* @param len is the length of padded message 
+        -:  751:* @return the index where the padding starts
+        -:  752:*/
+        1:  753:int Aes::paddingStartIndex(byte* message, int len)
+        -:  754:{
+        1:  755:	int index = -1;
+       16:  756:	for(int i=len-1;i>=0;i--)
+        -:  757:	{
+       16:  758:		if(message[i] == 0x01)
+        -:  759:		{
+        1:  760:			index = i;
+        1:  761:			break;
+        -:  762:		}
+        -:  763:	}
+        1:  764:	return index;
+        -:  765:}
+        -:  766:
+        -:  767:/**
+        -:  768:*  Decrypt a message using ECB mode
+        -:  769:*
+        -:  770:* @param cipher is the message to be decrypted
+        -:  771:* @param cipherLen is the length of the cipher text
+        -:  772:* @param key is the randomly generated key
+        -:  773:* @return the decrypted message
+        -:  774:*/
+        1:  775:byte *Aes::decryptECB(byte* cipher, int cipherLen, byte* key)
+        -:  776:{
+        1:  777:	byte* message = new byte[cipherLen];
+        -:  778:
+        1:  779:	byte** w = new byte*[4]; //allocate memory for rows  (4 bytes)
+        5:  780:	for(int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -:  781:	{
+        4:  782:		w[i] = new byte[Nb * (Nr+1)]; //key schedule for 128 its 44
+        -:  783:	}
+        -:  784:	
+        1:  785:	w = KeyExpansion(key, w);
+        -:  786:
+        3:  787:	for(int i=0;i<cipherLen/16;i++)
+        -:  788:	{
+        2:  789:		byte* currentBlock = new byte[16];
+        2:  790:		byte* messageBlock = new byte[16];
+       34:  791:		for(int j=0;j<16;j++)
+        -:  792:		{
+       32:  793:			currentBlock[j] = cipher[i*16+j];
+        -:  794:		}
+        2:  795:		messageBlock = InvCipher(currentBlock, w);
+        -:  796:
+       34:  797:		for(int j=0; j<16;j++)
+        -:  798:		{
+       32:  799:			message[i*16+j] = messageBlock[j];
+        -:  800:		}
+        -:  801:	}
+        1:  802:	return removePadding(message, cipherLen);
+        -:  803:}
+        -:  804:
+        -:  805:/**
+        -:  806:* Encrypt a message using CBC mode
+        -:  807:*
+        -:  808:* @param input is the message to be encrypted
+        -:  809:* @param messageLen is the length of the message
+        -:  810:* @param key is the randomly generated key
+        -:  811:* @param IV is the initialization vector
+        -:  812:* @return the encrypted message
+        -:  813:*/
+        1:  814:byte *Aes::encryptCBC(byte *input, int messageLen, byte *key, byte *IV)
+        -:  815:{
+        1:  816:	byte *paddedMessage = getPaddedMessage(input, messageLen);
+        1:  817:	int paddedMessageLen = messageLen + 16 - messageLen % 16;
+        1:  818:	byte *output = new byte[paddedMessageLen];
+        -:  819:
+        1:  820:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+        5:  821:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -:  822:	{
+        4:  823:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -:  824:	}
+        -:  825:
+        1:  826:	w = KeyExpansion(key, w);
+        -:  827:
+        1:  828:	byte *previousCipherBlock = new byte[16];
+        -:  829:
+        6:  830:	for (int i = 0; i < paddedMessageLen / 16; i++)
+        -:  831:	{
+        5:  832:		byte *currentBlock = new byte[16];
+        5:  833:		byte *currentInput = new byte[16];
+        5:  834:		byte *outputBlock = new byte[16];
+       85:  835:		for (int j = 0; j < 16; j++)
+        -:  836:		{
+       80:  837:			currentBlock[j] = paddedMessage[i * 16 + j];
+        -:  838:		}
+        -:  839:
+        5:  840:		if(i==0)
+        -:  841:		{
+       17:  842:			for(int j=0;j<16;j++)
+        -:  843:			{
+       16:  844:				currentInput[j] = currentBlock[j] ^ IV[j];
+        -:  845:			}
+        -:  846:		}
+        -:  847:		else
+        -:  848:		{
+       68:  849:			for (int j = 0; j < 16; j++)
+        -:  850:			{
+       64:  851:				currentInput[j] = currentBlock[j] ^ previousCipherBlock[j];
+        -:  852:			}
+        -:  853:		}
+        -:  854:		
+        -:  855:
+        5:  856:		outputBlock = Cipher(currentInput, w);
+        5:  857:		previousCipherBlock = outputBlock;
+       85:  858:		for (int j = 0; j < 16; j++)
+        -:  859:		{
+       80:  860:			output[i * 16 + j] = outputBlock[j];
+        -:  861:		}
+        -:  862:	}
+        1:  863:	return output;
+        -:  864:}
+        -:  865:
+        -:  866:/**
+        -:  867:* Decrypt a message using CBC mode
+        -:  868:*
+        -:  869:* @param cipher is the message to be decrypted
+        -:  870:* @param messageLen is the length of the cipher text
+        -:  871:* @param key is the randomly generated key
+        -:  872:* @param IV is the initialization vector
+        -:  873:* @return the decrypted message
+        -:  874:*/
+        1:  875:byte *Aes::decryptCBC(byte *cipher, int cipherLen, byte *key, byte *IV)
+        -:  876:{
+        1:  877:	byte *message = new byte[cipherLen];
+        -:  878:
+        1:  879:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+        5:  880:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -:  881:	{
+        4:  882:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -:  883:	}
+        -:  884:
+        1:  885:	w = KeyExpansion(key, w);
+        -:  886:
+        1:  887:	byte *previousCipherBlock = new byte[16];
+        -:  888:
+        6:  889:	for (int i = 0; i < cipherLen / 16; i++)
+        -:  890:	{
+        5:  891:		byte *currentBlock = new byte[16];
+        5:  892:		byte *messageBlock = new byte[16];
+        5:  893:		byte *decryptBlock = new byte[16];
+       85:  894:		for (int j = 0; j < 16; j++)
+        -:  895:		{
+       80:  896:			currentBlock[j] = cipher[i * 16 + j];
+        -:  897:		}
+        5:  898:		decryptBlock = InvCipher(currentBlock, w);
+        -:  899:		
+        -:  900:
+        5:  901:		if(i==0)
+        -:  902:		{
+       17:  903:			for(int j=0;j<16;j++)
+        -:  904:			{
+       16:  905:				messageBlock[j] = decryptBlock[j] ^IV[j];
+        -:  906:			}
+        -:  907:		}
+        -:  908:		else
+        -:  909:		{
+       68:  910:			for (int j = 0; j < 16; j++)
+        -:  911:			{
+       64:  912:				messageBlock[j] = decryptBlock[j] ^ previousCipherBlock[j];
+        -:  913:			}
+        -:  914:		}
+        -:  915:		
+       85:  916:		for (int j = 0; j < 16; j++)
+        -:  917:		{
+       80:  918:			message[i * 16 + j] = messageBlock[j];
+        -:  919:		}
+        5:  920:		previousCipherBlock = currentBlock;
+        -:  921:	}
+        -:  922:	// return removePadding(message, cipherLen); // resulting in a memmory allocation error,
+        -:  923:	// memory going out of bounds while creating a new messagewithoutpadding in removepadding
+        1:  924:	return message;
+        -:  925:}
+        -:  926:
+        2:  927:byte *Aes::encryptOFB(byte *input, int messageLen, byte *key, byte *IV)
+        -:  928:{
+        2:  929:	byte *cipher = new byte[messageLen];
+        -:  930:
+        2:  931:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+       10:  932:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -:  933:	{
+        8:  934:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -:  935:	}
+        -:  936:
+        2:  937:	w = KeyExpansion(key, w);
+        -:  938:
+        2:  939:	byte *previousOutputBlock = new byte[16];
+        -:  940:
+        2:  941:	double limit = (double)messageLen / 16;
+        -:  942:
+       10:  943:	for (double i = 0; i < limit; i++)
+        -:  944:	{
+        8:  945:		byte *currentBlock = new byte[16];
+        8:  946:		byte *currentInput = new byte[16];
+        8:  947:		byte *outputBlock = new byte[16];
+        8:  948:		byte *cipherBlock = new byte[16];
+        -:  949:		
+        8:  950:		if(!(i==floor(messageLen/16)))
+        -:  951:		{
+      119:  952:			for (int j = 0; j < 16; j++)
+        -:  953:			{
+      112:  954:				currentBlock[j] = input[(int)i * 16 + j];
+        -:  955:			}
+        -:  956:		}
+        -:  957:		else
+        -:  958:		{
+       16:  959:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -:  960:			{
+       15:  961:				currentBlock[j] = input[(int)i * 16 + j];
+        -:  962:			}
+        -:  963:		}
+        -:  964:
+        8:  965:		if((int)i==0)
+        -:  966:		{
+       34:  967:			for(int j=0;j<16;j++)
+        -:  968:			{
+       32:  969:				currentInput[j] = IV[j];
+        -:  970:			}
+        -:  971:		}
+        -:  972:		else
+        -:  973:		{
+      102:  974:			for (int j = 0; j < 16; j++)
+        -:  975:			{
+       96:  976:				currentInput[j] = previousOutputBlock[j];
+        -:  977:			}
+        -:  978:		}
+        -:  979:		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+        -:  980:		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+        -:  981:
+        8:  982:		outputBlock = Cipher(currentInput, w);
+        8:  983:		previousOutputBlock = outputBlock;
+        -:  984:		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+        -:  985:
+        8:  986:		if(!(i==floor(messageLen/16)))
+        -:  987:		{
+      119:  988:			for (int j = 0; j < 16; j++)
+        -:  989:			{
+      112:  990:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -:  991:			}
+      119:  992:			for (int j = 0; j < 16; j++)
+        -:  993:			{
+      112:  994:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -:  995:			}
+        -:  996:		}
+        -:  997:		else
+        -:  998:		{
+       16:  999:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1000:			{
+       15: 1001:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1002:			}
+       16: 1003:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1004:			{
+       15: 1005:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1006:			}
+        -: 1007:		}	
+        -: 1008:		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+        -: 1009:	}
+        2: 1010:	return cipher;
+        -: 1011:}
+        -: 1012:
+        2: 1013:byte *Aes::decryptOFB(byte *input, int messageLen, byte *key, byte *IV)
+        -: 1014:{
+        -: 1015:	// don't be misled by variable names, this is actually the decrypt function
+        -: 1016:	// Its just most of it was copy pasta
+        2: 1017:	byte *cipher = new byte[messageLen];
+        -: 1018:
+        2: 1019:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+       10: 1020:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -: 1021:	{
+        8: 1022:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -: 1023:	}
+        -: 1024:
+        2: 1025:	w = KeyExpansion(key, w);
+        -: 1026:
+        2: 1027:	byte *previousOutputBlock = new byte[16];
+        -: 1028:
+        2: 1029:	double limit = (double)messageLen / 16;
+        -: 1030:
+       10: 1031:	for (double i = 0; i < limit; i++)
+        -: 1032:	{
+        8: 1033:		byte *currentBlock = new byte[16];
+        8: 1034:		byte *currentInput = new byte[16];
+        8: 1035:		byte *outputBlock = new byte[16];
+        8: 1036:		byte *cipherBlock = new byte[16];
+        -: 1037:		
+        8: 1038:		if(!(i==floor(messageLen/16)))
+        -: 1039:		{
+      119: 1040:			for (int j = 0; j < 16; j++)
+        -: 1041:			{
+      112: 1042:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1043:			}
+        -: 1044:		}
+        -: 1045:		else
+        -: 1046:		{
+       16: 1047:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1048:			{
+       15: 1049:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1050:			}
+        -: 1051:		}
+        -: 1052:
+        8: 1053:		if((int)i==0)
+        -: 1054:		{
+       34: 1055:			for(int j=0;j<16;j++)
+        -: 1056:			{
+       32: 1057:				currentInput[j] = IV[j];
+        -: 1058:			}
+        -: 1059:		}
+        -: 1060:		else
+        -: 1061:		{
+      102: 1062:			for (int j = 0; j < 16; j++)
+        -: 1063:			{
+       96: 1064:				currentInput[j] = previousOutputBlock[j];
+        -: 1065:			}
+        -: 1066:		}
+        -: 1067:		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+        -: 1068:		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+        -: 1069:
+        8: 1070:		outputBlock = Cipher(currentInput, w);
+        8: 1071:		previousOutputBlock = outputBlock;
+        -: 1072:		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+        -: 1073:
+        8: 1074:		if(!(i==floor(messageLen/16)))
+        -: 1075:		{
+      119: 1076:			for (int j = 0; j < 16; j++)
+        -: 1077:			{
+      112: 1078:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1079:			}
+      119: 1080:			for (int j = 0; j < 16; j++)
+        -: 1081:			{
+      112: 1082:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1083:			}
+        -: 1084:		}
+        -: 1085:		else
+        -: 1086:		{
+       16: 1087:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1088:			{
+       15: 1089:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1090:			}
+       16: 1091:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1092:			{
+       15: 1093:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1094:			}
+        -: 1095:		}	
+        -: 1096:		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+        -: 1097:	}
+        2: 1098:	return cipher;
+        -: 1099:}
+        -: 1100:
+        6: 1101:byte *Aes::incrementCTR(byte *IV)
+        -: 1102:{
+        6: 1103:	byte one = 0x01;
+        6: 1104:	byte zero = 0x00;
+        6: 1105:	byte full = 0xff;
+        6: 1106:	byte* incIV = new byte[16];
+      102: 1107:	for(int i=0;i<16;i++)
+        -: 1108:	{
+       96: 1109:		incIV[i]=IV[i];
+        -: 1110:	}
+        -: 1111:	// cout<<"incIV "<<blockToReadable(incIV)<<"\n";
+        6: 1112:	if(!((int)IV[15]==(int)0xff))
+        -: 1113:	{
+        4: 1114:		incIV[15] = incIV[15] + one;
+        4: 1115:		return incIV;
+        -: 1116:	}
+        -: 1117:	else
+        -: 1118:	{
+        -: 1119:		// for(int i=15;i>=0;i--)
+        -: 1120:		// {
+        2: 1121:			incIV[15] = zero;
+        2: 1122:			int index = -1;
+       2*: 1123:			for(int j=14;j>=0;j--)
+        -: 1124:			{
+        -: 1125:				// cout<<"IV[j] "<<(int)IV[j]<<" full "<<(int)full<<"\n";
+        2: 1126:				if(!((int)IV[j]==(int)full))
+        -: 1127:				{
+        -: 1128:					
+        2: 1129:					index = j;
+        2: 1130:					break;
+        -: 1131:				}
+        -: 1132:			}
+        -: 1133:			// cout<<"index "<<index<<"\n";
+       2*: 1134:			for(int j=14;j>index;j--)
+        -: 1135:			{
+    #####: 1136:				incIV[j] = zero;
+        -: 1137:			}
+        2: 1138:			incIV[index] = incIV[index]+one;
+        -: 1139:		// }
+        -: 1140:		// cout<<"returning after incrementing "<<blockToReadable(incIV)<<"\n";
+        2: 1141:		return incIV;
+        -: 1142:	}
+        -: 1143:}
+        -: 1144:
+        1: 1145:byte *Aes::encryptCTR(byte *input, int messageLen, byte *key, byte *IV)
+        -: 1146:{
+        1: 1147:	byte *cipher = new byte[messageLen];
+        -: 1148:
+        1: 1149:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+        5: 1150:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -: 1151:	{
+        4: 1152:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -: 1153:	}
+        -: 1154:
+        1: 1155:	w = KeyExpansion(key, w);
+        -: 1156:
+        1: 1157:	byte *previousInputBlock = new byte[16];
+        -: 1158:
+        1: 1159:	double limit = (double)messageLen / 16;
+        -: 1160:
+        5: 1161:	for (double i = 0; i < limit; i++)
+        -: 1162:	{
+        4: 1163:		byte *currentBlock = new byte[16];
+        4: 1164:		byte *currentInput = new byte[16];
+        4: 1165:		byte *outputBlock = new byte[16];
+        4: 1166:		byte *cipherBlock = new byte[16];
+        -: 1167:		
+        4: 1168:		if(!(i==floor(messageLen/16)))
+        -: 1169:		{
+       68: 1170:			for (int j = 0; j < 16; j++)
+        -: 1171:			{
+       64: 1172:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1173:			}
+        -: 1174:		}
+        -: 1175:		else
+        -: 1176:		{
+    #####: 1177:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1178:			{
+    #####: 1179:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1180:			}
+        -: 1181:		}
+        -: 1182:
+        4: 1183:		if((int)i==0)
+        -: 1184:		{
+       17: 1185:			for(int j=0;j<16;j++)
+        -: 1186:			{
+       16: 1187:				currentInput[j] = IV[j];
+        -: 1188:			}
+        -: 1189:		}
+        -: 1190:		else
+        -: 1191:		{
+        -: 1192:			// for (int j = 0; j < 16; j++)
+        -: 1193:			// {
+        3: 1194:				currentInput = incrementCTR(previousInputBlock);
+        -: 1195:			// }
+        -: 1196:		}
+        -: 1197:		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+        -: 1198:		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+        -: 1199:
+        4: 1200:		outputBlock = Cipher(currentInput, w);
+        4: 1201:		previousInputBlock = currentInput;
+        -: 1202:		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+        -: 1203:
+        4: 1204:		if(!(i==floor(messageLen/16)))
+        -: 1205:		{
+       68: 1206:			for (int j = 0; j < 16; j++)
+        -: 1207:			{
+       64: 1208:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1209:			}
+       68: 1210:			for (int j = 0; j < 16; j++)
+        -: 1211:			{
+       64: 1212:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1213:			}
+        -: 1214:		}
+        -: 1215:		else
+        -: 1216:		{
+    #####: 1217:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1218:			{
+    #####: 1219:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1220:			}
+    #####: 1221:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1222:			{
+    #####: 1223:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1224:			}
+        -: 1225:		}	
+        -: 1226:		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+        -: 1227:	}
+        1: 1228:	return cipher;
+        -: 1229:}
+        -: 1230:
+        1: 1231:byte *Aes::decryptCTR(byte *input, int messageLen, byte *key, byte *IV)
+        -: 1232:{
+        1: 1233:	byte *cipher = new byte[messageLen];
+        -: 1234:
+        1: 1235:	byte **w = new byte *[4];   //allocate memory for rows  (4 bytes)
+        5: 1236:	for (int i = 0; i < 4; i++) //allocate columns, the number of key expasions
+        -: 1237:	{
+        4: 1238:		w[i] = new byte[Nb * (Nr + 1)]; //key schedule for 128 its 44
+        -: 1239:	}
+        -: 1240:
+        1: 1241:	w = KeyExpansion(key, w);
+        -: 1242:
+        1: 1243:	byte *previousInputBlock = new byte[16];
+        -: 1244:
+        1: 1245:	double limit = (double)messageLen / 16;
+        -: 1246:
+        5: 1247:	for (double i = 0; i < limit; i++)
+        -: 1248:	{
+        4: 1249:		byte *currentBlock = new byte[16];
+        4: 1250:		byte *currentInput = new byte[16];
+        4: 1251:		byte *outputBlock = new byte[16];
+        4: 1252:		byte *cipherBlock = new byte[16];
+        -: 1253:		
+        4: 1254:		if(!(i==floor(messageLen/16)))
+        -: 1255:		{
+       68: 1256:			for (int j = 0; j < 16; j++)
+        -: 1257:			{
+       64: 1258:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1259:			}
+        -: 1260:		}
+        -: 1261:		else
+        -: 1262:		{
+    #####: 1263:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1264:			{
+    #####: 1265:				currentBlock[j] = input[(int)i * 16 + j];
+        -: 1266:			}
+        -: 1267:		}
+        -: 1268:
+        4: 1269:		if((int)i==0)
+        -: 1270:		{
+       17: 1271:			for(int j=0;j<16;j++)
+        -: 1272:			{
+       16: 1273:				currentInput[j] = IV[j];
+        -: 1274:			}
+        -: 1275:		}
+        -: 1276:		else
+        -: 1277:		{
+        -: 1278:			// for (int j = 0; j < 16; j++)
+        -: 1279:			// {
+        3: 1280:				currentInput = incrementCTR(previousInputBlock);
+        -: 1281:			// }
+        -: 1282:		}
+        -: 1283:		// cout<<"P:\t"<<blockToReadable(currentBlock)<<"\n";
+        -: 1284:		// cout<<"I:\t"<<blockToReadable(currentInput)<<"\n";
+        -: 1285:
+        4: 1286:		outputBlock = Cipher(currentInput, w);
+        4: 1287:		previousInputBlock = currentInput;
+        -: 1288:		// cout<<"O:\t"<<blockToReadable(outputBlock)<<"\n";
+        -: 1289:
+        4: 1290:		if(!(i==floor(messageLen/16)))
+        -: 1291:		{
+       68: 1292:			for (int j = 0; j < 16; j++)
+        -: 1293:			{
+       64: 1294:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1295:			}
+       68: 1296:			for (int j = 0; j < 16; j++)
+        -: 1297:			{
+       64: 1298:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1299:			}
+        -: 1300:		}
+        -: 1301:		else
+        -: 1302:		{
+    #####: 1303:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1304:			{
+    #####: 1305:				cipherBlock[j] = currentBlock[j] ^ outputBlock[j];
+        -: 1306:			}
+    #####: 1307:			for (int j = 0; j < messageLen-(int)i*16; j++)
+        -: 1308:			{
+    #####: 1309:				cipher[(int)i * 16 + j] = cipherBlock[j];
+        -: 1310:			}
+        -: 1311:		}	
+        -: 1312:		// cout<<"C:\t"<<blockToReadable(cipherBlock)<<"\n\n";	
+        -: 1313:	}
+        1: 1314:	return cipher;
+        -: 1315:}
+        -: 1316:
+        -: 1317:// int main()
+        -: 1318:// {
+        -: 1319:// 	Aes aes(128);
+        -: 1320:// 	byte message[64] = {0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+        -: 1321:// 			    0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 0x9e ,0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+        -: 1322:// 			    0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11, 0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+        -: 1323:// 			    0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17, 0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10};
+        -: 1324:
+        -: 1325:// 	byte cipherKey[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+        -: 1326:// 	byte IV[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+        -: 1327:// 	string expectedCipher = "76 49 ab ac 81 19 b2 46 ce e9 8e 9b 12 e9 19 7d "
+        -: 1328:// 				"50 86 cb 9b 50 72 19 ee 95 db 11 3a 91 76 78 b2 "
+        -: 1329:// 				"73 be d6 b8 e3 c1 74 3b 71 16 e6 9e 22 22 95 16 "
+        -: 1330:// 				"3f f1 ca a1 68 1f ac 9 12 e ca 30 75 86 e1 a7 "
+        -: 1331:// 				"7e 31 3b 5d 59 58 52 8d bb 41 56 13 d 93 af 3c";//because of padding
+        -: 1332:// 	byte *output = aes.encryptCBC(message, 64, cipherKey, IV);
+        -: 1333:// 	cout << aes.blockToReadable(output, 80);
+        -: 1334:// 	// ASSERT_EQ(expectedCipher, aes.blockToReadable(output, 80));
+        -: 1335:
+        -: 1336:// 	byte *input = aes.decryptCBC(output, 80, cipherKey, IV);
+        -: 1337:// 	cout << aes.blockToReadable(input, 64);
+        -: 1338:// 	string expectedMessage = "6b c1 be e2 2e 40 9f 96 e9 3d 7e 11 73 93 17 2a "
+        -: 1339:// 							 "ae 2d 8a 57 1e 3 ac 9c 9e b7 6f ac 45 af 8e 51 "
+        -: 1340:// 							 "30 c8 1c 46 a3 5c e4 11 e5 fb c1 19 1a a 52 ef"
+        -: 1341:// 							 "f6 9f 24 45 df 4f 9b 17 ad 2b 41 7b e6 6c 37 10";
+        -: 1342:// 	// ASSERT_EQ(expectedMessage, aes.blockToReadable(input, 64));
+        -: 1343:// 	return 0;
+        -: 1344:// }
