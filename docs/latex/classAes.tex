@@ -1,0 +1,224 @@
+\hypertarget{classAes}{}\doxysection{Aes Class Reference}
+\label{classAes}\index{Aes@{Aes}}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classAes_a2ae790d53374d2bc81ccb60a6fbde33a}\label{classAes_a2ae790d53374d2bc81ccb60a6fbde33a}} 
+int {\bfseries get\+Nk} ()
+\item 
+\mbox{\Hypertarget{classAes_a4c06d6a44c2a14bceee7da9805b7c4e5}\label{classAes_a4c06d6a44c2a14bceee7da9805b7c4e5}} 
+int {\bfseries get\+Nr} ()
+\item 
+\mbox{\Hypertarget{classAes_ac90f1eecdaaa44ecb2beef12a348efce}\label{classAes_ac90f1eecdaaa44ecb2beef12a348efce}} 
+int {\bfseries get\+Nb} ()
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_a3a29fcbd9aeb573ae9048f6c95f0598e}{encrypt\+E\+CB}} (byte $\ast$input, int message\+Len, byte $\ast$key)
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_ae6d6c950f3c2d0e9a6e86e89414b2d15}{decrypt\+E\+CB}} (byte $\ast$cipher, int cipher\+Len, byte $\ast$key)
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_a28bb554004f6f0acce3d60a3e19da0a3}{encrypt\+C\+BC}} (byte $\ast$input, int message\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_a654bde9e158e25d78041f7d82961cff6}{decrypt\+C\+BC}} (byte $\ast$cipher, int cipher\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+\mbox{\Hypertarget{classAes_a71448ec7b1b97b9431596b4b98239c22}\label{classAes_a71448ec7b1b97b9431596b4b98239c22}} 
+byte $\ast$ {\bfseries encrypt\+O\+FB} (byte $\ast$cipher, int cipher\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+\mbox{\Hypertarget{classAes_a092f3d9d57866742c883a878ee3da3b5}\label{classAes_a092f3d9d57866742c883a878ee3da3b5}} 
+byte $\ast$ {\bfseries decrypt\+O\+FB} (byte $\ast$cipher, int cipher\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+\mbox{\Hypertarget{classAes_a606d4240ee18d707b9ce6fa688e2b6e2}\label{classAes_a606d4240ee18d707b9ce6fa688e2b6e2}} 
+byte $\ast$ {\bfseries encrypt\+C\+TR} (byte $\ast$input, int message\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+\mbox{\Hypertarget{classAes_a7bbe93930505b3ecb5f157f10514f875}\label{classAes_a7bbe93930505b3ecb5f157f10514f875}} 
+byte $\ast$ {\bfseries decrypt\+C\+TR} (byte $\ast$cipher, int cipher\+Len, byte $\ast$key, byte $\ast$IV)
+\item 
+byte $\ast$$\ast$ \mbox{\hyperlink{classAes_ab44bd34e2b37e8d10bd9023cf00eac2a}{Key\+Expansion}} (byte $\ast$key, byte $\ast$$\ast$w)
+\item 
+string \mbox{\hyperlink{classAes_a1216f7eafb689af0c495b1613c446d43}{block\+To\+Readable}} (byte $\ast$inout, int len)
+\item 
+\mbox{\hyperlink{classAes_ac99b0e24758c52fd9e5a3496e2d49a4c}{Aes}} (int key\+Len)
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_a52e46f43d71c835bb58d389cc01cd4c9}{Cipher}} (byte $\ast$in, byte $\ast$$\ast$w)
+\item 
+byte $\ast$ \mbox{\hyperlink{classAes_a90dd01ed6cc4c6770c9933b51bdd57fc}{Inv\+Cipher}} (byte $\ast$in, byte $\ast$$\ast$w)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classAes_ac99b0e24758c52fd9e5a3496e2d49a4c}\label{classAes_ac99b0e24758c52fd9e5a3496e2d49a4c}} 
+\index{Aes@{Aes}!Aes@{Aes}}
+\index{Aes@{Aes}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{Aes()}{Aes()}}
+{\footnotesize\ttfamily Aes\+::\+Aes (\begin{DoxyParamCaption}\item[{int}]{key\+Len }\end{DoxyParamCaption})}
+
+C\+SE 539 Semester Project
+
+Group Members\+: Klowee Malakowsky, Ishan Srivastava
+
+Implementaion of the Advanced Encryption Standard (Rijndael algorithm) 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classAes_a1216f7eafb689af0c495b1613c446d43}\label{classAes_a1216f7eafb689af0c495b1613c446d43}} 
+\index{Aes@{Aes}!blockToReadable@{blockToReadable}}
+\index{blockToReadable@{blockToReadable}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{blockToReadable()}{blockToReadable()}}
+{\footnotesize\ttfamily string Aes\+::block\+To\+Readable (\begin{DoxyParamCaption}\item[{byte $\ast$}]{inout,  }\item[{int}]{len = {\ttfamily 16} }\end{DoxyParamCaption})}
+
+Takes a byte pointer to a block and makes it readable
+
+
+\begin{DoxyParams}{Parameters}
+{\em inout} & is the byte array to make readable (block) \\
+\hline
+{\em len} & is the block length \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the readable string 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_a52e46f43d71c835bb58d389cc01cd4c9}\label{classAes_a52e46f43d71c835bb58d389cc01cd4c9}} 
+\index{Aes@{Aes}!Cipher@{Cipher}}
+\index{Cipher@{Cipher}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{Cipher()}{Cipher()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::\+Cipher (\begin{DoxyParamCaption}\item[{byte $\ast$}]{in,  }\item[{byte $\ast$$\ast$}]{w }\end{DoxyParamCaption})}
+
+Encrypts a 128 bit message
+
+
+\begin{DoxyParams}{Parameters}
+{\em in} & is the message to be encrypted \\
+\hline
+{\em w} & is the key schedule \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the encrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_a654bde9e158e25d78041f7d82961cff6}\label{classAes_a654bde9e158e25d78041f7d82961cff6}} 
+\index{Aes@{Aes}!decryptCBC@{decryptCBC}}
+\index{decryptCBC@{decryptCBC}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{decryptCBC()}{decryptCBC()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::decrypt\+C\+BC (\begin{DoxyParamCaption}\item[{byte $\ast$}]{cipher,  }\item[{int}]{cipher\+Len,  }\item[{byte $\ast$}]{key,  }\item[{byte $\ast$}]{IV }\end{DoxyParamCaption})}
+
+Decrypt a message using C\+BC mode
+
+
+\begin{DoxyParams}{Parameters}
+{\em cipher} & is the message to be decrypted \\
+\hline
+{\em message\+Len} & is the length of the cipher text \\
+\hline
+{\em key} & is the randomly generated key \\
+\hline
+{\em IV} & is the initialization vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the decrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_ae6d6c950f3c2d0e9a6e86e89414b2d15}\label{classAes_ae6d6c950f3c2d0e9a6e86e89414b2d15}} 
+\index{Aes@{Aes}!decryptECB@{decryptECB}}
+\index{decryptECB@{decryptECB}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{decryptECB()}{decryptECB()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::decrypt\+E\+CB (\begin{DoxyParamCaption}\item[{byte $\ast$}]{cipher,  }\item[{int}]{cipher\+Len,  }\item[{byte $\ast$}]{key }\end{DoxyParamCaption})}
+
+Decrypt a message using E\+CB mode
+
+
+\begin{DoxyParams}{Parameters}
+{\em cipher} & is the message to be decrypted \\
+\hline
+{\em cipher\+Len} & is the length of the cipher text \\
+\hline
+{\em key} & is the randomly generated key \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the decrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_a28bb554004f6f0acce3d60a3e19da0a3}\label{classAes_a28bb554004f6f0acce3d60a3e19da0a3}} 
+\index{Aes@{Aes}!encryptCBC@{encryptCBC}}
+\index{encryptCBC@{encryptCBC}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{encryptCBC()}{encryptCBC()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::encrypt\+C\+BC (\begin{DoxyParamCaption}\item[{byte $\ast$}]{input,  }\item[{int}]{message\+Len,  }\item[{byte $\ast$}]{key,  }\item[{byte $\ast$}]{IV }\end{DoxyParamCaption})}
+
+Encrypt a message using C\+BC mode
+
+
+\begin{DoxyParams}{Parameters}
+{\em input} & is the message to be encrypted \\
+\hline
+{\em message\+Len} & is the length of the message \\
+\hline
+{\em key} & is the randomly generated key \\
+\hline
+{\em IV} & is the initialization vector \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the encrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_a3a29fcbd9aeb573ae9048f6c95f0598e}\label{classAes_a3a29fcbd9aeb573ae9048f6c95f0598e}} 
+\index{Aes@{Aes}!encryptECB@{encryptECB}}
+\index{encryptECB@{encryptECB}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{encryptECB()}{encryptECB()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::encrypt\+E\+CB (\begin{DoxyParamCaption}\item[{byte $\ast$}]{input,  }\item[{int}]{message\+Len,  }\item[{byte $\ast$}]{key }\end{DoxyParamCaption})}
+
+Encrypt a message using E\+CB mode
+
+
+\begin{DoxyParams}{Parameters}
+{\em input} & is the message to be encrypted \\
+\hline
+{\em message\+Len} & is the length of the message being encrypted \\
+\hline
+{\em key} & is the randomly generated key \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the encrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_a90dd01ed6cc4c6770c9933b51bdd57fc}\label{classAes_a90dd01ed6cc4c6770c9933b51bdd57fc}} 
+\index{Aes@{Aes}!InvCipher@{InvCipher}}
+\index{InvCipher@{InvCipher}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{InvCipher()}{InvCipher()}}
+{\footnotesize\ttfamily byte $\ast$ Aes\+::\+Inv\+Cipher (\begin{DoxyParamCaption}\item[{byte $\ast$}]{in,  }\item[{byte $\ast$$\ast$}]{w }\end{DoxyParamCaption})}
+
+Decrypts a 128 bit message
+
+
+\begin{DoxyParams}{Parameters}
+{\em in} & is the message to be decrypted \\
+\hline
+{\em w} & is the key schedule \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the decrypted message 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classAes_ab44bd34e2b37e8d10bd9023cf00eac2a}\label{classAes_ab44bd34e2b37e8d10bd9023cf00eac2a}} 
+\index{Aes@{Aes}!KeyExpansion@{KeyExpansion}}
+\index{KeyExpansion@{KeyExpansion}!Aes@{Aes}}
+\doxysubsubsection{\texorpdfstring{KeyExpansion()}{KeyExpansion()}}
+{\footnotesize\ttfamily byte $\ast$$\ast$ Aes\+::\+Key\+Expansion (\begin{DoxyParamCaption}\item[{byte $\ast$}]{key,  }\item[{byte $\ast$$\ast$}]{w }\end{DoxyParamCaption})}
+
+Generates key schedule from original key for a total of Nb(Nr + 1) words
+
+
+\begin{DoxyParams}{Parameters}
+{\em key} & is the original random key \\
+\hline
+{\em w} & is the key schedule \\
+\hline
+{\em Nk} & is the number of 4 byte words in the cipher key \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+the resulting key schedule 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/aes.\+h\item 
+src/aes.\+cpp\end{DoxyCompactItemize}
