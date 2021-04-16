@@ -1,9 +1,11 @@
-/**********************************************************************
-CSE 539 Semester Project 
-Group Members: Klowee Malakowsky, Ishan Srivastava
-Description: Implementaion of the Advanced Encryption Standard
-(Rijndael algorithm)
-*************************************************************************/
+/**
+* CSE 539 Semester Project 
+*
+* Group Members: Klowee Malakowsky, Ishan Srivastava
+*
+* Implementaion of the Advanced Encryption Standard
+* (Rijndael algorithm)
+*/
 
 #include "aes.h"
 //#define Nb 4 //Nb is the Number of columns (32-bit words) comprising the State. 
@@ -12,15 +14,6 @@ Description: Implementaion of the Advanced Encryption Standard
 //For this standard, Nk = 4, 6, or 8
 //int Nr; //Nr is the Number of rounds, which is a function of Nk and Nb. 
 //For this standard, Nr = 10, 12, or 14. 
-
-//**************************************************************************
-// Function : ShiftRows
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the transformation in the cipher that shifts the 
-// last three rows of the state by different offsets.
-//**************************************************************************
 
 Aes::Aes(int keyLen)
 {
@@ -59,6 +52,14 @@ int Aes::getNb()
 	return Nb;
 }
 
+/**
+* Shifts the rows in the state
+*
+* Used as part of the transformation proccess in the cipher
+*
+* @param s is the state
+* @return the new state after shifting rows
+*/
 byte** Aes::ShiftRows(byte** s)
 {
 	byte** temp = new byte*[4]; //declare a temp array to hold all the original values of s
@@ -95,14 +96,14 @@ byte** Aes::ShiftRows(byte** s)
 	return s;
 }
 
-//**************************************************************************
-// Function : InvShiftRows
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the inverse cipher that shifts the last three rows
-// of the state by different offsets to "undo" shift rows from the cipher.
-//**************************************************************************
+/**
+* Shifts the rows in the state
+*
+* Used as part of the transformation proccess in the inverse cipher
+*
+* @param s is the state
+* @return the new state after shifting rows
+*/
 byte **Aes::InvShiftRows(byte **s)
 {
 	byte** temp = new byte*[4]; //temp array to hold the original values of s
@@ -143,14 +144,14 @@ byte **Aes::InvShiftRows(byte **s)
 	return s;
 }
 
-//**************************************************************************
-// Function : SubBytes
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the transformation in cipher that replaces the values 
-// in the state with values from a look up table, s-box.
-//**************************************************************************
+/**
+* Substitutes each byte in the state with one from s-box
+*
+* Used as part of the transformation proccess in the cipher
+*
+* @param s is the state
+* @return the new state after substitions
+*/
 byte **Aes::SubBytes(byte **s)
 {	
 	byte valueRow;   	//will be the value of the row to find in s-box
@@ -169,15 +170,14 @@ byte **Aes::SubBytes(byte **s)
 	return s;
 }
 
-//**************************************************************************
-// Function : InvSubBytes
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the inverse cipher that replaces the values 
-// in the state with values from a look up table, inverse s-box. This is to 
-// "undo" the substition in SubBytes.
-//**************************************************************************
+/**
+* Substitutes each byte in the state with one from the inverse s-box
+*
+* Used as part of the transformation proccess in the inverse cipher
+*
+* @param s is the state
+* @return the new state after substitions
+*/
 byte **Aes::InvSubBytes(byte **s)
 {
 	byte valueRow;		//will be the value of the row to find in s-box
@@ -196,15 +196,14 @@ byte **Aes::InvSubBytes(byte **s)
 	return s;
 }
 
-//***********************************************************************************
-// Function : MixColumns
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the transformation in the cipher that takes all of
-// the columns in the state and independently mixes the data to produce new columns.
-// Uses look up tables for multiplication.
-//************************************************************************************
+/**
+* Mixes the columns in the state
+*
+* Used as part of the transformation proccess in the cipher
+*
+* @param s is the state
+* @return the new state after mixing the columns
+*/
 byte **Aes::MixColumns(byte **s)
 {
 	byte** temp = new byte*[4]; //allocate memory for pointer array
@@ -268,15 +267,14 @@ byte **Aes::MixColumns(byte **s)
 	return temp;
 }
 
-//***********************************************************************************
-// Function : InvMixColumns
-// Takes a double pointer, which is the state, and return a double pointer,
-// which is the updated state.
-//
-// Description: Part of the inverse cipher that takes all of the columns in the state 
-// and independently mixes the data to produce new columns that "undo" MixColumns.
-// Uses look up tables for multiplication.
-//************************************************************************************
+/**
+* Mixes the columns in the state
+*
+* Used as part of the transformation proccess in the inverse cipher
+*
+* @param s is the state
+* @return the new state after mixing columns
+*/
 byte **Aes::InvMixColumns(byte **s)
 { 
 	byte** temp = new byte*[4]; //Allocate array (size 4) of byte pointers (rows);
@@ -329,16 +327,16 @@ byte **Aes::InvMixColumns(byte **s)
 	return temp;
 }
 
-//***********************************************************************************
-// Function : AddRoundKey
-// Takes a double pointer, which is the state, a double pointer, which is the key
-// schedule, and in int, which is the round, and return a double pointer, which is 
-// the updated state.
-//
-// Description: Part of the transformation in the cipher and the inverse cipher that 
-// takes a round key that is the same size as the state and XORs them together. The 
-// round key is generated during the key expansion.
-//************************************************************************************
+/**
+* XORs a round key from the key schedule with the state
+*
+* Used as part of the transformation proccess in the cipher and inverse cipher
+*
+* @param s is the state
+* @param w is the key schedule
+* @param round is the round number the cipher/inverse cipher is on
+* @return the new state after XORing the round key 
+*/
 byte **Aes::AddRoundKey(byte **s, byte **w, int round)
 {
 	for(int i = 0; i < 4; i ++)
@@ -351,13 +349,14 @@ byte **Aes::AddRoundKey(byte **s, byte **w, int round)
 	return s;
 }
 
-//***********************************************************************************
-// Function : xtime
-// Takes a byte to multiple with polynomial x and and returns the new byte.
-//
-// Description: Used by Rcon to perform multiplication polynomial x. Implimented at
-// byte level with a left shift and bitwise XOR with 0x1b
-//************************************************************************************
+/**
+* Multiplies a byte with polynomial x
+*
+* Multiplication is performed with left shift and bitwise XOR with 0x1b
+*
+* @param b is the byte to multiply with x
+* @return the resulting byte after multiplication with x
+*/
 byte Aes::xtime(byte b) // multiplication by x
 {
 	if((b>>7) == 1)
@@ -370,12 +369,15 @@ byte Aes::xtime(byte b) // multiplication by x
 	}
 }
 
-//***********************************************************************************
-// Function : xtime
-// Takes a byte pointer and int and returns a byte pointer, rcon.
-//
-// Description: Used by the KeyExpansion. Rcon generate the round constant rcon.
-//************************************************************************************
+/**
+* Generates round constant
+*
+* Used during the key expansion process
+*
+* @param b is a byte pointer 
+* @param n is the round 
+* @return the resulting round constant rcon
+*/
 byte *Aes::Rcon(byte *a, int n)
 {
 	byte c = 1;
@@ -391,14 +393,14 @@ byte *Aes::Rcon(byte *a, int n)
 	return a;
 }
 
-
-//***********************************************************************************
-// Function : SubWord
-// Takes a byte pointer w, which is a word, and returns the updated word.
-//
-// Description: Used in KeyExpansion, takes a four byte input (word) and uses the s-box
-// to substitute the values of each of the four bytes to produce a new word. 
-//************************************************************************************
+/**
+* Uses s-box to substitue values to creale a new word
+*
+* Used during the key expansion process
+*
+* @param w is the word 
+* @return the resulting word after substitution
+*/
 byte *Aes::SubWord(byte *w)
 {
 	byte valueRow;   
@@ -413,13 +415,14 @@ byte *Aes::SubWord(byte *w)
 	return w;
 }
 
-//***********************************************************************************
-// Function : RotWord
-// Takes a byte pointer w, which is a word, and returns the updated word.
-//
-// Description: Used in KeyExpansion, takes a four byte input (word) and performs a
-// cyclic permutation. 
-//************************************************************************************
+/**
+* Performs cyclic permutation
+*
+* Used during the key expansion process
+*
+* @param w is the word 
+* @return the resulting word after cyclic permutation
+*/
 byte *Aes::RotWord(byte *w)
 {
 	byte* temp = new byte[4]; //allocate memory for  temp 
@@ -434,14 +437,14 @@ byte *Aes::RotWord(byte *w)
 	return w;
 }
 
-//*************************************************************************************
-// Function : KeyExpansion
-// Takes a byte pointer key, which is the random key, a double pointer w, which will be
-// the key schedule, and returns the generated key schedule.
-//
-// Description: Uses a smaller (128, 192, 256) bit key to generate a larger key with a
-// total of Nb(Nr + 1) words and return this generated key schedule.
-//***************************************************************************************
+/**
+* Generates key schedule from original key for a total of Nb(Nr + 1) words
+*
+* @param key is the original random key
+* @param w is the key schedule
+* @param Nk is the number of 4 byte words in the cipher key 
+* @return the resulting key schedule
+*/
 byte **Aes::KeyExpansion(byte *key, byte **w) // generates a total of Nb(Nr + 1) words
 { 
 
@@ -492,15 +495,12 @@ byte **Aes::KeyExpansion(byte *key, byte **w) // generates a total of Nb(Nr + 1)
 	return w;
 }
 
-//*************************************************************************************
-// Function : blockToState
-// Takes a byte pointer, such as the input array, and returns a matrix 
-// (double pointer), such as the state.
-//
-// Description: 
-// Takes a byte pointer, such as the input array, and changes it into a matrix 
-// (double pointer), such as the state.
-//***************************************************************************************
+/**
+* Takes a byte pointer and makes it into a matrix
+*
+* @param inout is the byte pointer to change into a matrix
+* @return a double byte pointer to the resulting matrix 
+*/
 byte **Aes::blockToState(byte *inout)
 {
 	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
@@ -519,15 +519,12 @@ byte **Aes::blockToState(byte *inout)
 	return state;
 }
 
-//*************************************************************************************
-// Function : blockToState
-// Takes a double byte pointer, such as the state and returns .byte pointer, such as 
-// the input array
-//
-// Description: 
-// Takes a byte pointer, such as the input array, and changes it into a matrix 
-// (double pointer), such as the state.
-//***************************************************************************************
+/**
+* Takes a matrix, double byte pointer and makes it into a byte array
+*
+* @param state is the matrix to change into a single array
+* @return a byte pointer to the resulting array
+*/
 byte *Aes::stateToBlock(byte **state)
 {
 	byte *inout = new byte[4*Nb]; //Allocate array (size 4) of byte pointers (rows)
@@ -541,15 +538,13 @@ byte *Aes::stateToBlock(byte **state)
 	return inout;
 }
 
-//***********************************************************************************
-// Function : Cipher
-// Takes a byte pointer, the input message, and a double pointer, the key schedule, 
-// and return a double byte pointer, which is the cipher text.
-//
-// Description: Takes a message (128 bits) and performs multiple different rounds of 
-// different transformations to create a cipher text. Can use keys of length 128, 
-// 192, or 256 bits.
-//************************************************************************************
+/**
+* Encrypts a 128 bit message
+*
+* @param in is the message to be encrypted
+* @param w is the key schedule 
+* @return the encrypted message
+*/
 byte *Aes::Cipher(byte *in, byte **w)
 {
 	byte** state = new byte*[4]; //Allocate array (size 4) of byte pointers (rows)
@@ -575,15 +570,13 @@ byte *Aes::Cipher(byte *in, byte **w)
 	return stateToBlock(state);			//put matrix back into array for output
 }
 
-//***********************************************************************************
-// Function : InvCipher
-// Takes a byte pointer, the cipher text, and a double pointer, the key schedule, 
-// and return a double byte pointer, which is the original message.
-//
-// Description: Takes a cipher text (128 bits) and performs multiple different rounds of 
-// different transformations to "undo" the cipher and return the original message. 
-// Can use keys of length 128, 192, or 256 bits.
-//************************************************************************************
+/**
+* Decrypts a 128 bit message
+*
+* @param in is the message to be decrypted
+* @param w is the key schedule 
+* @return the decrypted message
+*/
 byte *Aes::InvCipher(byte *in, byte **w)
 {
 	byte** state = new byte*[4]; //allocate memory for the state
@@ -608,6 +601,13 @@ byte *Aes::InvCipher(byte *in, byte **w)
 	return stateToBlock(state);  		//put matrix back into array for output
 }
 
+/**
+* Takes a byte pointer to a block and makes it readable
+*
+* @param inout is the byte array to make readable (block)
+* @param len is the block length 
+* @return the readable string
+*/
 string Aes::blockToReadable(byte* inout, int len=16)
 {
 	stringstream stream;
@@ -626,6 +626,14 @@ string Aes::blockToReadable(byte* inout, int len=16)
 	return result;
 }
 
+/**
+* Adds a specified amount of padding to a message
+*
+* @param len is the amount of padding to add
+* @param messageLen is the total length of the message to encrypt
+* @param input is the message to add padding to
+* @return the message with added padding
+*/
 byte *Aes::addPadding(int len, int messageLen, byte *input)
 {
 	byte one = 0x01;
@@ -651,6 +659,13 @@ byte *Aes::addPadding(int len, int messageLen, byte *input)
 	return paddedMessage;
 }
 
+/**
+* Find the amount fo padding to add then calls addPadding
+*
+* @param input is the message to be encrypted 
+* @param messageLen is the length of the message
+* @return the message with padding added
+*/
 byte *Aes::getPaddedMessage(byte* input, int messageLen)
 {
 	int len;
@@ -669,6 +684,14 @@ byte *Aes::getPaddedMessage(byte* input, int messageLen)
 	return paddedMessage;
 }
 
+/**
+* Encrypt a message using ECB mode
+*
+* @param input is the message to be encrypted
+* @param messageLen is the length of the message being encrypted
+* @param key is the randomly generated key
+* @return the encrypted message
+*/
 byte *Aes::encryptECB(byte* input, int messageLen, byte* key)
 {
 	byte* paddedMessage = getPaddedMessage(input, messageLen);
@@ -701,6 +724,13 @@ byte *Aes::encryptECB(byte* input, int messageLen, byte* key)
 	return output;
 }
 
+/**
+* Removes the padding from a message
+*
+* @param message is the padded message
+* @param len is the length of the padded message
+* @return the original message without padding
+*/
 byte *Aes::removePadding(byte* message, int len)
 {
 	// add checks for invalid padding of message???
@@ -713,6 +743,13 @@ byte *Aes::removePadding(byte* message, int len)
 	return messageWithoutPadding;
 }
 
+/**
+* Finds the index where the padding starts on the message
+*
+* @param message is the padded message
+* @param len is the length of padded message 
+* @return the index where the padding starts
+*/
 int Aes::paddingStartIndex(byte* message, int len)
 {
 	int index = -1;
@@ -727,6 +764,14 @@ int Aes::paddingStartIndex(byte* message, int len)
 	return index;
 }
 
+/**
+*  Decrypt a message using ECB mode
+*
+* @param cipher is the message to be decrypted
+* @param cipherLen is the length of the cipher text
+* @param key is the randomly generated key
+* @return the decrypted message
+*/
 byte *Aes::decryptECB(byte* cipher, int cipherLen, byte* key)
 {
 	byte* message = new byte[cipherLen];
@@ -757,6 +802,15 @@ byte *Aes::decryptECB(byte* cipher, int cipherLen, byte* key)
 	return removePadding(message, cipherLen);
 }
 
+/**
+* Encrypt a message using CBC mode
+*
+* @param input is the message to be encrypted
+* @param messageLen is the length of the message
+* @param key is the randomly generated key
+* @param IV is the initialization vector
+* @return the encrypted message
+*/
 byte *Aes::encryptCBC(byte *input, int messageLen, byte *key, byte *IV)
 {
 	byte *paddedMessage = getPaddedMessage(input, messageLen);
@@ -809,6 +863,15 @@ byte *Aes::encryptCBC(byte *input, int messageLen, byte *key, byte *IV)
 	return output;
 }
 
+/**
+* Decrypt a message using CBC mode
+*
+* @param cipher is the message to be decrypted
+* @param messageLen is the length of the cipher text
+* @param key is the randomly generated key
+* @param IV is the initialization vector
+* @return the decrypted message
+*/
 byte *Aes::decryptCBC(byte *cipher, int cipherLen, byte *key, byte *IV)
 {
 	byte *message = new byte[cipherLen];
