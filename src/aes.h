@@ -31,6 +31,7 @@ class Aes
 		byte *getPaddedMessage(byte *input, int messageLen);
 		byte *removePadding(byte* message, int len);
 		int paddingStartIndex(byte* message, int len);
+		byte *incrementCTR(byte *IV);
 
 	public:
 		int getNk();
@@ -46,6 +47,10 @@ class Aes
 
 		byte *encryptOFB(byte *cipher, int cipherLen, byte *key, byte *IV);
 		byte *decryptOFB(byte *cipher, int cipherLen, byte *key, byte *IV);
+
+		byte *encryptCTR(byte *input, int messageLen, byte *key, byte *IV);
+		byte *decryptCTR(byte *cipher, int cipherLen, byte *key, byte *IV);
+
 
 		byte **KeyExpansion(byte *key, byte **w);
 		string blockToReadable(byte* inout, int len);
