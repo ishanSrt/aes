@@ -10,6 +10,9 @@ run:
 	$(CC) $(CFLAGS) src/run.cpp -o build/run
 test:
 	$(CC) $(CFLAGS) tests/test.cpp -lgtest -lgtest_main -pthread -o build/test
+# profile:
+# bash -c "valgrind --tool=callgrind ./build/run"
+# then run with qcachegrind on mac
 coverage:
 	$(CC) $(CFLAGS) tests/test.cpp -lgtest -lgtest_main -pthread -fprofile-arcs -ftest-coverage -o build/coverage
 	bash -c "./build/coverage"
