@@ -6,6 +6,8 @@ all:
 	$(CC) $(CFLAGS) src/aes.cpp -o build/prog
 debug:
 	$(CC) $(CFLAGS) -g src/aes.cpp -o build/debug
+run:
+	$(CC) $(CFLAGS) src/run.cpp -o build/run
 test:
 	$(CC) $(CFLAGS) tests/test.cpp -lgtest -lgtest_main -pthread -o build/test
 coverage:
